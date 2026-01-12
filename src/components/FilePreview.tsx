@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { X, Download, ExternalLink } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { X, Download, Play, Pause, Volume2, VolumeX, Maximize, SkipBack, SkipForward } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FileIcon } from "./FileIcon";
 
@@ -17,50 +17,167 @@ interface FilePreviewProps {
 export function FilePreview({ file, onClose, onDownload }: FilePreviewProps) {
   const [content, setContent] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const mediaRef = useRef<HTMLVideoElement | HTMLAudioElement>(null);
+
+  const getFileExtension = (filename: string): string => {
+    return filename.split(".").pop()?.toLowerCase() || "";
+  };
 
   useEffect(() => {
     if (!file) {
       setContent(null);
+      setIsPlaying(false);
+      setCurrentTime(0);
+      setDuration(0);
       return;
     }
 
-    const loadPreview = async () => {
-      if (file.type === "image") {
-        setContent(`/api/files/${encodeURIComponent(file.path)}`);
-        return;
-      }
+    const ext = getFileExtension(file.name);
+    const url = `/api/files/${encodeURIComponent(file.path)}`;
 
-      if (file.type === "document" && file.name.endsWith(".txt")) {
-        setLoading(true);
-        try {
-          const response = await fetch(`/api/files/${encodeURIComponent(file.path)}`);
-          const text = await response.text();
-          setContent(text);
-        } catch {
-          setContent("Failed to load preview");
-        }
-        setLoading(false);
-        return;
-      }
+    // Image files
+    if (["jpg", "jpeg", "png", "gif", "webp", "svg", "bmp", "ico"].includes(ext)) {
+      setContent(url);
+      return;
+    }
 
-      setContent(null);
-    };
+    // Video files
+    if (["mp4", "webm", "ogg", "mov"].includes(ext)) {
+      setContent(url);
+      return;
+    }
 
-    loadPreview();
+    // Audio files
+    if (["mp3", "wav", "ogg", "m4a", "flac", "aac"].includes(ext)) {
+      setContent(url);
+      return;
+    }
+
+    // PDF files
+    if (ext === "pdf") {
+      setContent(url);
+      return;
+    }
+
+    // EPUB files - show info (browser can't render EPUB directly)
+    if (ext === "epub") {
+      setContent("epub");
+      return;
+    }
+
+    // Text/code files
+    if (["txt", "md", "json", "js", "ts", "tsx", "jsx", "css", "html", "xml", "yaml", "yml", "log", "sh", "py", "java", "c", "cpp", "h", "go", "rs", "sql", "env", "gitignore", "dockerfile"].includes(ext)) {
+      setLoading(true);
+      fetch(url)
+        .then((res) => res.text())
+        .then((text) => setContent(text))
+        .catch(() => setContent("Failed to load preview"))
+        .finally(() => setLoading(false));
+      return;
+    }
+
+    setContent(null);
   }, [file]);
+
+  // Handle escape key
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleEscape);
+    return () => window.removeEventListener("keydown", handleEscape);
+  }, [onClose]);
+
+  // Media controls
+  const togglePlay = () => {
+    if (mediaRef.current) {
+      if (isPlaying) {
+        mediaRef.current.pause();
+      } else {
+        mediaRef.current.play();
+      }
+    }
+  };
+
+  const toggleMute = () => {
+    if (mediaRef.current) {
+      mediaRef.current.muted = !isMuted;
+      setIsMuted(!isMuted);
+    }
+  };
+
+  const handleTimeUpdate = () => {
+    if (mediaRef.current) {
+      setCurrentTime(mediaRef.current.currentTime);
+    }
+  };
+
+  const handleLoadedMetadata = () => {
+    if (mediaRef.current) {
+      setDuration(mediaRef.current.duration);
+    }
+  };
+
+  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const time = parseFloat(e.target.value);
+    if (mediaRef.current) {
+      mediaRef.current.currentTime = time;
+      setCurrentTime(time);
+    }
+  };
+
+  const skip = (seconds: number) => {
+    if (mediaRef.current) {
+      mediaRef.current.currentTime = Math.max(0, Math.min(duration, currentTime + seconds));
+    }
+  };
+
+  const formatTime = (time: number): string => {
+    if (!isFinite(time)) return "0:00";
+    const mins = Math.floor(time / 60);
+    const secs = Math.floor(time % 60);
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  const handleFullscreen = () => {
+    if (mediaRef.current && mediaRef.current instanceof HTMLVideoElement) {
+      mediaRef.current.requestFullscreen();
+    }
+  };
 
   if (!file) return null;
 
+  const ext = getFileExtension(file.name);
+  const isImage = ["jpg", "jpeg", "png", "gif", "webp", "svg", "bmp", "ico"].includes(ext);
+  const isVideo = ["mp4", "webm", "ogg", "mov"].includes(ext);
+  const isAudio = ["mp3", "wav", "ogg", "m4a", "flac", "aac"].includes(ext);
+  const isPdf = ext === "pdf";
+  const isEpub = ext === "epub";
+  const isText = ["txt", "md", "json", "js", "ts", "tsx", "jsx", "css", "html", "xml", "yaml", "yml", "log", "sh", "py", "java", "c", "cpp", "h", "go", "rs", "sql", "env", "gitignore", "dockerfile"].includes(ext);
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-      <div className="bg-card border rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col m-4">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-200"
+      onClick={onClose}
+    >
+      <div
+        className="bg-card border rounded-2xl shadow-2xl w-full max-w-5xl max-h-[95vh] flex flex-col m-4 overflow-hidden animate-in zoom-in-95 duration-200"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b">
+        <div className="flex items-center justify-between p-4 border-b bg-muted/30">
           <div className="flex items-center gap-3 min-w-0">
-            <FileIcon type={file.type} className="size-6 shrink-0" />
-            <span className="font-medium truncate">{file.name}</span>
+            <FileIcon type={file.type} className="size-5 shrink-0" />
+            <span className="font-medium truncate text-sm">{file.name}</span>
+            <span className="text-xs text-muted-foreground shrink-0 hidden sm:inline">
+              ({formatBytes(file.size)})
+            </span>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-1 shrink-0">
             <Button
               variant="ghost"
               size="icon-sm"
@@ -73,7 +190,7 @@ export function FilePreview({ file, onClose, onDownload }: FilePreviewProps) {
               variant="ghost"
               size="icon-sm"
               onClick={onClose}
-              title="Close"
+              title="Close (Esc)"
             >
               <X className="size-4" />
             </Button>
@@ -81,31 +198,150 @@ export function FilePreview({ file, onClose, onDownload }: FilePreviewProps) {
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-auto p-4">
+        <div className="flex-1 overflow-auto bg-black/5 dark:bg-black/20">
           {loading ? (
-            <div className="flex items-center justify-center h-64">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <div className="flex items-center justify-center h-96">
+              <div className="animate-spin rounded-full h-10 w-10 border-2 border-primary border-t-transparent"></div>
             </div>
-          ) : file.type === "image" && content ? (
-            <img
+          ) : isImage && content ? (
+            <div className="flex items-center justify-center p-4 min-h-96">
+              <img
+                src={content}
+                alt={file.name}
+                className="max-w-full max-h-[75vh] rounded-lg object-contain shadow-lg"
+              />
+            </div>
+          ) : isVideo && content ? (
+            <div className="flex flex-col">
+              <video
+                ref={mediaRef as React.RefObject<HTMLVideoElement>}
+                src={content}
+                className="w-full max-h-[70vh] bg-black"
+                onTimeUpdate={handleTimeUpdate}
+                onLoadedMetadata={handleLoadedMetadata}
+                onPlay={() => setIsPlaying(true)}
+                onPause={() => setIsPlaying(false)}
+                onEnded={() => setIsPlaying(false)}
+                onClick={togglePlay}
+              />
+              {/* Video Controls */}
+              <div className="p-4 bg-card border-t space-y-3">
+                <input
+                  type="range"
+                  min={0}
+                  max={duration || 100}
+                  value={currentTime}
+                  onChange={handleSeek}
+                  className="w-full h-2 rounded-full appearance-none cursor-pointer bg-muted [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary"
+                />
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Button variant="ghost" size="icon-sm" onClick={() => skip(-10)} title="Rewind 10s">
+                      <SkipBack className="size-4" />
+                    </Button>
+                    <Button variant="default" size="icon" onClick={togglePlay}>
+                      {isPlaying ? <Pause className="size-5" /> : <Play className="size-5 ml-0.5" />}
+                    </Button>
+                    <Button variant="ghost" size="icon-sm" onClick={() => skip(10)} title="Forward 10s">
+                      <SkipForward className="size-4" />
+                    </Button>
+                    <span className="text-sm text-muted-foreground ml-2">
+                      {formatTime(currentTime)} / {formatTime(duration)}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Button variant="ghost" size="icon-sm" onClick={toggleMute} title={isMuted ? "Unmute" : "Mute"}>
+                      {isMuted ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
+                    </Button>
+                    <Button variant="ghost" size="icon-sm" onClick={handleFullscreen} title="Fullscreen">
+                      <Maximize className="size-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : isAudio && content ? (
+            <div className="p-8 space-y-6">
+              <div className="flex flex-col items-center gap-4">
+                <div className="size-32 rounded-full bg-gradient-to-br from-primary/30 to-primary/5 flex items-center justify-center shadow-xl animate-pulse">
+                  <FileIcon type="audio" className="size-16" />
+                </div>
+                <p className="font-medium text-lg text-center max-w-md truncate">{file.name}</p>
+              </div>
+              <audio
+                ref={mediaRef as React.RefObject<HTMLAudioElement>}
+                src={content}
+                onTimeUpdate={handleTimeUpdate}
+                onLoadedMetadata={handleLoadedMetadata}
+                onPlay={() => setIsPlaying(true)}
+                onPause={() => setIsPlaying(false)}
+                onEnded={() => setIsPlaying(false)}
+              />
+              {/* Audio Controls */}
+              <div className="space-y-4 max-w-md mx-auto">
+                <input
+                  type="range"
+                  min={0}
+                  max={duration || 100}
+                  value={currentTime}
+                  onChange={handleSeek}
+                  className="w-full h-2 rounded-full appearance-none cursor-pointer bg-muted [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary"
+                />
+                <div className="flex items-center justify-between text-sm text-muted-foreground">
+                  <span>{formatTime(currentTime)}</span>
+                  <span>{formatTime(duration)}</span>
+                </div>
+                <div className="flex items-center justify-center gap-4">
+                  <Button variant="ghost" size="icon" onClick={() => skip(-10)} title="Rewind 10s">
+                    <SkipBack className="size-5" />
+                  </Button>
+                  <Button variant="default" size="lg" className="size-16 rounded-full shadow-lg" onClick={togglePlay}>
+                    {isPlaying ? <Pause className="size-7" /> : <Play className="size-7 ml-1" />}
+                  </Button>
+                  <Button variant="ghost" size="icon" onClick={() => skip(10)} title="Forward 10s">
+                    <SkipForward className="size-5" />
+                  </Button>
+                  <Button variant="ghost" size="icon" onClick={toggleMute} title={isMuted ? "Unmute" : "Mute"}>
+                    {isMuted ? <VolumeX className="size-5" /> : <Volume2 className="size-5" />}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          ) : isPdf && content ? (
+            <iframe
               src={content}
-              alt={file.name}
-              className="max-w-full max-h-[60vh] mx-auto rounded-lg object-contain"
+              className="w-full h-[80vh] border-0"
+              title={file.name}
             />
-          ) : file.type === "document" && content ? (
-            <pre className="whitespace-pre-wrap font-mono text-sm bg-muted p-4 rounded-lg overflow-auto max-h-[60vh]">
-              {content}
-            </pre>
+          ) : isEpub ? (
+            <div className="flex flex-col items-center justify-center p-8 min-h-96 text-center">
+              <div className="size-24 rounded-2xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center mb-6">
+                <FileIcon type="document" className="size-12" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">{file.name}</h3>
+              <p className="text-muted-foreground mb-6 max-w-md">
+                EPUB files cannot be previewed directly in the browser. Download to read with an e-reader app like Calibre, Apple Books, or Google Play Books.
+              </p>
+              <Button onClick={() => onDownload(file.path)} size="lg" className="gap-2">
+                <Download className="size-5" />
+                Download EPUB
+              </Button>
+            </div>
+          ) : isText && content ? (
+            <div className="p-4">
+              <pre className="whitespace-pre-wrap font-mono text-sm p-4 rounded-lg overflow-auto max-h-[75vh] bg-muted/50 border">
+                {content}
+              </pre>
+            </div>
           ) : (
-            <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
-              <FileIcon type={file.type} className="size-16 mb-4" />
-              <p>Preview not available for this file type</p>
-              <Button
-                variant="outline"
-                className="mt-4"
-                onClick={() => onDownload(file.path)}
-              >
-                <Download className="size-4 mr-2" />
+            <div className="flex flex-col items-center justify-center p-8 min-h-96 text-center">
+              <FileIcon type={file.type} className="size-20 mb-6 opacity-50" />
+              <h3 className="text-lg font-medium mb-2">Preview not available</h3>
+              <p className="text-muted-foreground mb-6">
+                This file type cannot be previewed in the browser.
+              </p>
+              <Button onClick={() => onDownload(file.path)} className="gap-2">
+                <Download className="size-4" />
                 Download to view
               </Button>
             </div>
@@ -114,4 +350,12 @@ export function FilePreview({ file, onClose, onDownload }: FilePreviewProps) {
       </div>
     </div>
   );
+}
+
+function formatBytes(bytes: number): string {
+  if (bytes <= 0) return "0 B";
+  const k = 1024;
+  const sizes = ["B", "KB", "MB", "GB", "TB"];
+  const i = Math.min(Math.floor(Math.log(bytes) / Math.log(k)), sizes.length - 1);
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
 }
