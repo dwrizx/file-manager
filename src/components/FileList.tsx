@@ -1,4 +1,4 @@
-import { Download, Trash2, Loader2, Folder, FolderOpen, Eye, GripVertical, Check } from "lucide-react";
+import { Download, Trash2, Loader2, Folder, FolderOpen, Eye, GripVertical, Check, FolderInput } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FileIcon } from "./FileIcon";
 import { cn } from "@/lib/utils";
@@ -22,6 +22,7 @@ interface FileListProps {
   onNavigate: (path: string) => void;
   onPreview: (file: FileInfo) => void;
   onToggleSelect: (path: string) => void;
+  onMoveFile?: (file: FileInfo) => void;
   onDragStart?: (file: FileInfo) => void;
   onDrop?: (targetPath: string) => void;
 }
@@ -54,6 +55,7 @@ export function FileList({
   onNavigate,
   onPreview,
   onToggleSelect,
+  onMoveFile,
   onDragStart,
   onDrop,
 }: FileListProps) {
@@ -98,6 +100,7 @@ export function FileList({
           onNavigate={onNavigate}
           onPreview={onPreview}
           onToggleSelect={onToggleSelect}
+          onMoveFile={onMoveFile}
           onDragStart={onDragStart}
           onDrop={onDrop}
         />
@@ -115,6 +118,7 @@ function FileItem({
   onNavigate,
   onPreview,
   onToggleSelect,
+  onMoveFile,
   onDragStart,
   onDrop,
 }: {
@@ -126,6 +130,7 @@ function FileItem({
   onNavigate: (path: string) => void;
   onPreview: (file: FileInfo) => void;
   onToggleSelect: (path: string) => void;
+  onMoveFile?: (file: FileInfo) => void;
   onDragStart?: (file: FileInfo) => void;
   onDrop?: (targetPath: string) => void;
 }) {
@@ -266,6 +271,15 @@ function FileItem({
             </Button>
           </>
         )}
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          onClick={(e) => { e.stopPropagation(); onMoveFile?.(file); }}
+          title="Move to folder"
+          className="hover:bg-blue-500/10 hover:text-blue-500"
+        >
+          <FolderInput className="size-4" />
+        </Button>
         <Button
           variant="ghost"
           size="icon-sm"

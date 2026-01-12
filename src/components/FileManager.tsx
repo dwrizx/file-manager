@@ -8,6 +8,7 @@ import { Breadcrumb } from "./Breadcrumb";
 import { SearchBar } from "./SearchBar";
 import { FilePreview } from "./FilePreview";
 import { CreateFolderDialog } from "./CreateFolderDialog";
+import { MoveFileDialog } from "./MoveFileDialog";
 import { ThemeToggle } from "./ThemeToggle";
 import { useFiles } from "@/hooks/useFiles";
 
@@ -46,6 +47,7 @@ export function FileManager() {
 
   const [previewFile, setPreviewFile] = useState<FileInfo | null>(null);
   const [showCreateFolder, setShowCreateFolder] = useState(false);
+  const [moveFileTarget, setMoveFileTarget] = useState<FileInfo | null>(null);
   const [draggedFile, setDraggedFile] = useState<FileInfo | null>(null);
 
   const handleDrop = async (targetPath: string) => {
@@ -57,6 +59,10 @@ export function FileManager() {
       }
     }
     setDraggedFile(null);
+  };
+
+  const handleMoveFile = async (source: string, destination: string) => {
+    await moveFile(source, destination);
   };
 
   return (
@@ -197,6 +203,7 @@ export function FileManager() {
               onNavigate={navigateToFolder}
               onPreview={setPreviewFile}
               onToggleSelect={toggleSelect}
+              onMoveFile={setMoveFileTarget}
               onDragStart={setDraggedFile}
               onDrop={handleDrop}
             />
@@ -220,6 +227,14 @@ export function FileManager() {
         isOpen={showCreateFolder}
         onClose={() => setShowCreateFolder(false)}
         onCreateFolder={createFolder}
+      />
+
+      <MoveFileDialog
+        isOpen={moveFileTarget !== null}
+        file={moveFileTarget}
+        currentPath={currentPath}
+        onClose={() => setMoveFileTarget(null)}
+        onMove={handleMoveFile}
       />
     </div>
   );

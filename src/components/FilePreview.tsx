@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from "react";
 import { X, Download, Play, Pause, Volume2, VolumeX, Maximize, SkipBack, SkipForward } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FileIcon } from "./FileIcon";
+import { CodeHighlight } from "./CodeHighlight";
+import { EpubReader } from "./EpubReader";
 
 interface FilePreviewProps {
   file: {
@@ -21,7 +23,17 @@ export function FilePreview({ file, onClose, onDownload }: FilePreviewProps) {
   const [isMuted, setIsMuted] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [isDark, setIsDark] = useState(false);
   const mediaRef = useRef<HTMLVideoElement | HTMLAudioElement>(null);
+
+  // Check for dark mode
+  useEffect(() => {
+    const checkDark = () => setIsDark(document.documentElement.classList.contains("dark"));
+    checkDark();
+    const observer = new MutationObserver(checkDark);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    return () => observer.disconnect();
+  }, []);
 
   const getFileExtension = (filename: string): string => {
     return filename.split(".").pop()?.toLowerCase() || "";
@@ -63,14 +75,14 @@ export function FilePreview({ file, onClose, onDownload }: FilePreviewProps) {
       return;
     }
 
-    // EPUB files - show info (browser can't render EPUB directly)
+    // EPUB files
     if (ext === "epub") {
-      setContent("epub");
+      setContent(url);
       return;
     }
 
     // Text/code files
-    if (["txt", "md", "json", "js", "ts", "tsx", "jsx", "css", "html", "xml", "yaml", "yml", "log", "sh", "py", "java", "c", "cpp", "h", "go", "rs", "sql", "env", "gitignore", "dockerfile"].includes(ext)) {
+    if (["txt", "md", "json", "js", "ts", "tsx", "jsx", "css", "html", "xml", "yaml", "yml", "log", "sh", "py", "java", "c", "cpp", "h", "go", "rs", "sql", "env", "gitignore", "dockerfile", "makefile", "toml", "ini", "cfg", "conf", "properties", "gradle", "kt", "swift", "rb", "php", "pl", "r", "scala", "vue", "svelte"].includes(ext)) {
       setLoading(true);
       fetch(url)
         .then((res) => res.text())
@@ -157,7 +169,7 @@ export function FilePreview({ file, onClose, onDownload }: FilePreviewProps) {
   const isAudio = ["mp3", "wav", "ogg", "m4a", "flac", "aac"].includes(ext);
   const isPdf = ext === "pdf";
   const isEpub = ext === "epub";
-  const isText = ["txt", "md", "json", "js", "ts", "tsx", "jsx", "css", "html", "xml", "yaml", "yml", "log", "sh", "py", "java", "c", "cpp", "h", "go", "rs", "sql", "env", "gitignore", "dockerfile"].includes(ext);
+  const isCode = ["txt", "md", "json", "js", "ts", "tsx", "jsx", "css", "html", "xml", "yaml", "yml", "log", "sh", "py", "java", "c", "cpp", "h", "go", "rs", "sql", "env", "gitignore", "dockerfile", "makefile", "toml", "ini", "cfg", "conf", "properties", "gradle", "kt", "swift", "rb", "php", "pl", "r", "scala", "vue", "svelte"].includes(ext);
 
   return (
     <div
@@ -313,25 +325,11 @@ export function FilePreview({ file, onClose, onDownload }: FilePreviewProps) {
               className="w-full h-[80vh] border-0"
               title={file.name}
             />
-          ) : isEpub ? (
-            <div className="flex flex-col items-center justify-center p-8 min-h-96 text-center">
-              <div className="size-24 rounded-2xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center mb-6">
-                <FileIcon type="document" className="size-12" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">{file.name}</h3>
-              <p className="text-muted-foreground mb-6 max-w-md">
-                EPUB files cannot be previewed directly in the browser. Download to read with an e-reader app like Calibre, Apple Books, or Google Play Books.
-              </p>
-              <Button onClick={() => onDownload(file.path)} size="lg" className="gap-2">
-                <Download className="size-5" />
-                Download EPUB
-              </Button>
-            </div>
-          ) : isText && content ? (
+          ) : isEpub && content ? (
+            <EpubReader url={content} fileName={file.name} />
+          ) : isCode && content ? (
             <div className="p-4">
-              <pre className="whitespace-pre-wrap font-mono text-sm p-4 rounded-lg overflow-auto max-h-[75vh] bg-muted/50 border">
-                {content}
-              </pre>
+              <CodeHighlight code={content} language={ext} isDark={isDark} />
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center p-8 min-h-96 text-center">
