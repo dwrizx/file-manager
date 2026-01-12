@@ -1,6 +1,8 @@
-import { Download, Trash2, Loader2, Folder, Eye, GripVertical, Check } from "lucide-react";
+import { Download, Trash2, Loader2, Folder, FolderOpen, Eye, GripVertical, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FileIcon } from "./FileIcon";
+import { cn } from "@/lib/utils";
+import { useState } from "react";
 
 interface FileInfo {
   name: string;
@@ -57,28 +59,39 @@ export function FileList({
 }: FileListProps) {
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="size-8 animate-spin text-muted-foreground" />
+      <div className="flex flex-col items-center justify-center py-16 gap-3">
+        <div className="relative">
+          <div className="absolute inset-0 rounded-full bg-primary/20 animate-ping" />
+          <div className="size-12 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center">
+            <Loader2 className="size-6 animate-spin text-primary-foreground" />
+          </div>
+        </div>
+        <p className="text-sm text-muted-foreground">Loading files...</p>
       </div>
     );
   }
 
   if (files.length === 0) {
     return (
-      <div className="text-center py-12 text-muted-foreground">
-        <Folder className="size-16 mx-auto mb-4 opacity-50" />
-        <p className="text-lg">No files yet</p>
-        <p className="text-sm mt-1">Upload some files or create a folder to get started</p>
+      <div className="text-center py-16 px-4">
+        <div className="size-20 mx-auto mb-4 rounded-2xl bg-muted/50 flex items-center justify-center">
+          <Folder className="size-10 text-muted-foreground/50" />
+        </div>
+        <h3 className="text-lg font-medium mb-1">No files yet</h3>
+        <p className="text-sm text-muted-foreground max-w-xs mx-auto">
+          Upload some files or create a folder to get started
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-1">
-      {files.map((file) => (
+    <div className="space-y-2">
+      {files.map((file, index) => (
         <FileItem
           key={file.path}
           file={file}
+          index={index}
           isSelected={selectedFiles.has(file.path)}
           onDownload={onDownload}
           onDelete={onDelete}
@@ -95,6 +108,7 @@ export function FileList({
 
 function FileItem({
   file,
+  index,
   isSelected,
   onDownload,
   onDelete,
@@ -105,6 +119,7 @@ function FileItem({
   onDrop,
 }: {
   file: FileInfo;
+  index: number;
   isSelected: boolean;
   onDownload: (path: string) => void;
   onDelete: (path: string) => Promise<void>;
@@ -114,6 +129,8 @@ function FileItem({
   onDragStart?: (file: FileInfo) => void;
   onDrop?: (targetPath: string) => void;
 }) {
+  const [isDragOver, setIsDragOver] = useState(false);
+
   const handleClick = () => {
     if (file.isDirectory) {
       onNavigate(file.path);
@@ -147,11 +164,17 @@ function FileItem({
   const handleDragOver = (e: React.DragEvent) => {
     if (file.isDirectory) {
       e.preventDefault();
+      setIsDragOver(true);
     }
+  };
+
+  const handleDragLeave = () => {
+    setIsDragOver(false);
   };
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
+    setIsDragOver(false);
     if (file.isDirectory && onDrop) {
       onDrop(file.path);
     }
@@ -163,39 +186,59 @@ function FileItem({
       draggable
       onDragStart={handleDragStart}
       onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      className={`group flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all
-        ${isSelected ? "bg-primary/10 border-primary" : "bg-card hover:bg-muted/50 border-transparent hover:border-border"}
-        ${file.isDirectory ? "hover:bg-primary/5" : ""}
-      `}
+      style={{ animationDelay: `${index * 30}ms` }}
+      className={cn(
+        "group flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all duration-200 animate-in fade-in-0 slide-in-from-bottom-1",
+        isSelected
+          ? "bg-primary/10 border-primary/50 shadow-sm"
+          : "bg-card hover:bg-muted/50 border-transparent hover:border-border",
+        file.isDirectory && "hover:bg-amber-500/5 hover:border-amber-500/30",
+        isDragOver && "bg-primary/20 border-primary scale-[1.02] shadow-lg"
+      )}
     >
       {/* Drag handle */}
-      <GripVertical className="size-4 text-muted-foreground opacity-0 group-hover:opacity-50 cursor-grab shrink-0" />
+      <GripVertical className="size-4 text-muted-foreground opacity-0 group-hover:opacity-40 cursor-grab shrink-0 transition-opacity" />
 
       {/* Selection checkbox */}
       <button
         onClick={handleSelect}
-        className={`shrink-0 size-5 rounded border-2 flex items-center justify-center transition-colors
-          ${isSelected ? "bg-primary border-primary text-primary-foreground" : "border-muted-foreground/30 hover:border-primary"}
-        `}
+        className={cn(
+          "shrink-0 size-5 rounded-md border-2 flex items-center justify-center transition-all",
+          isSelected
+            ? "bg-primary border-primary text-primary-foreground scale-105"
+            : "border-muted-foreground/30 hover:border-primary hover:scale-105"
+        )}
       >
         {isSelected && <Check className="size-3" />}
       </button>
 
       {/* Icon */}
-      {file.isDirectory ? (
-        <Folder className="size-8 text-amber-500 shrink-0" />
-      ) : (
-        <FileIcon type={file.type} className="shrink-0" />
-      )}
+      <div className={cn(
+        "shrink-0 size-10 rounded-lg flex items-center justify-center transition-transform group-hover:scale-105",
+        file.isDirectory ? "bg-amber-500/10" : "bg-muted"
+      )}>
+        {file.isDirectory ? (
+          isDragOver ? (
+            <FolderOpen className="size-6 text-amber-500" />
+          ) : (
+            <Folder className="size-6 text-amber-500" />
+          )
+        ) : (
+          <FileIcon type={file.type} className="size-5" />
+        )}
+      </div>
 
       {/* Info */}
       <div className="flex-1 min-w-0">
-        <p className="font-medium truncate" title={file.name}>
+        <p className="font-medium truncate group-hover:text-primary transition-colors" title={file.name}>
           {file.name}
         </p>
-        <p className="text-sm text-muted-foreground">
-          {file.isDirectory ? "Folder" : formatBytes(file.size)} • {formatDate(file.createdAt)}
+        <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-2">
+          <span>{file.isDirectory ? "Folder" : formatBytes(file.size)}</span>
+          <span className="size-1 rounded-full bg-muted-foreground/30" />
+          <span>{formatDate(file.createdAt)}</span>
         </p>
       </div>
 
@@ -208,6 +251,7 @@ function FileItem({
               size="icon-sm"
               onClick={(e) => { e.stopPropagation(); onPreview(file); }}
               title="Preview"
+              className="hover:bg-primary/10 hover:text-primary"
             >
               <Eye className="size-4" />
             </Button>
@@ -216,6 +260,7 @@ function FileItem({
               size="icon-sm"
               onClick={handleDownload}
               title="Download"
+              className="hover:bg-primary/10 hover:text-primary"
             >
               <Download className="size-4" />
             </Button>
@@ -225,7 +270,7 @@ function FileItem({
           variant="ghost"
           size="icon-sm"
           onClick={handleDelete}
-          className="text-destructive hover:text-destructive"
+          className="hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
           title="Delete"
         >
           <Trash2 className="size-4" />

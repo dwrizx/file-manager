@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Search, X, Filter } from "lucide-react";
+import { Search, X, SlidersHorizontal, Folder, FileText, Image, Video, Music, Archive } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface SearchBarProps {
   value: string;
@@ -11,63 +12,78 @@ interface SearchBarProps {
 }
 
 const FILE_TYPES = [
-  { value: "", label: "All" },
-  { value: "folder", label: "Folders" },
-  { value: "document", label: "Documents" },
-  { value: "image", label: "Images" },
-  { value: "video", label: "Videos" },
-  { value: "audio", label: "Audio" },
-  { value: "archive", label: "Archives" },
+  { value: "", label: "All", icon: null },
+  { value: "folder", label: "Folders", icon: Folder },
+  { value: "document", label: "Docs", icon: FileText },
+  { value: "image", label: "Images", icon: Image },
+  { value: "video", label: "Videos", icon: Video },
+  { value: "audio", label: "Audio", icon: Music },
+  { value: "archive", label: "Archives", icon: Archive },
 ];
 
 export function SearchBar({ value, onChange, filterType, onFilterChange }: SearchBarProps) {
   const [showFilters, setShowFilters] = useState(false);
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       <div className="flex gap-2">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground">
+            <Search className="size-4" />
+          </div>
           <Input
             type="text"
-            placeholder="Search files..."
+            placeholder="Search files and folders..."
             value={value}
             onChange={(e) => onChange(e.target.value)}
-            className="pl-9 pr-9"
+            className="pl-10 pr-10 h-11 rounded-xl bg-muted/50 border-transparent focus:border-primary/50 focus:bg-background transition-colors"
           />
           {value && (
             <Button
               variant="ghost"
               size="icon-sm"
               onClick={() => onChange("")}
-              className="absolute right-1 top-1/2 -translate-y-1/2"
+              className="absolute right-2 top-1/2 -translate-y-1/2 hover:bg-destructive/10 hover:text-destructive"
             >
               <X className="size-4" />
             </Button>
           )}
         </div>
         <Button
-          variant={showFilters || filterType ? "secondary" : "outline"}
+          variant={showFilters || filterType ? "default" : "outline"}
           size="icon"
           onClick={() => setShowFilters(!showFilters)}
           title="Filter by type"
+          className={cn(
+            "h-11 w-11 rounded-xl shrink-0 transition-all",
+            (showFilters || filterType) && "shadow-md"
+          )}
         >
-          <Filter className="size-4" />
+          <SlidersHorizontal className="size-4" />
         </Button>
       </div>
 
       {showFilters && (
-        <div className="flex flex-wrap gap-2">
-          {FILE_TYPES.map((type) => (
-            <Button
-              key={type.value}
-              variant={filterType === type.value ? "default" : "outline"}
-              size="sm"
-              onClick={() => onFilterChange(type.value)}
-            >
-              {type.label}
-            </Button>
-          ))}
+        <div className="flex flex-wrap gap-2 p-3 bg-muted/30 rounded-xl animate-in slide-in-from-top-2 duration-200">
+          {FILE_TYPES.map((type) => {
+            const Icon = type.icon;
+            const isActive = filterType === type.value;
+            return (
+              <button
+                key={type.value}
+                onClick={() => onFilterChange(type.value)}
+                className={cn(
+                  "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all",
+                  isActive
+                    ? "bg-primary text-primary-foreground shadow-md"
+                    : "bg-background hover:bg-muted border border-border hover:border-primary/30"
+                )}
+              >
+                {Icon && <Icon className="size-3.5" />}
+                {type.label}
+              </button>
+            );
+          })}
         </div>
       )}
     </div>

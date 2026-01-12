@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { FolderPlus, X } from "lucide-react";
+import { useState, useEffect } from "react";
+import { FolderPlus, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -13,6 +13,16 @@ export function CreateFolderDialog({ isOpen, onClose, onCreateFolder }: CreateFo
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Handle escape key
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") handleClose();
+    };
+    window.addEventListener("keydown", handleEscape);
+    return () => window.removeEventListener("keydown", handleEscape);
+  }, [isOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,39 +52,79 @@ export function CreateFolderDialog({ isOpen, onClose, onCreateFolder }: CreateFo
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-      <div className="bg-card border rounded-xl shadow-2xl w-full max-w-md m-4">
-        <div className="flex items-center justify-between p-4 border-b">
-          <div className="flex items-center gap-2">
-            <FolderPlus className="size-5" />
-            <h2 className="font-semibold">New Folder</h2>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
+      onClick={handleClose}
+    >
+      <div
+        className="bg-card border rounded-2xl shadow-2xl w-full max-w-md m-4 animate-in zoom-in-95 duration-200"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between p-5 border-b bg-muted/30 rounded-t-2xl">
+          <div className="flex items-center gap-3">
+            <div className="size-10 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center shadow-lg">
+              <FolderPlus className="size-5 text-white" />
+            </div>
+            <div>
+              <h2 className="font-semibold text-lg">Create Folder</h2>
+              <p className="text-xs text-muted-foreground">Enter a name for your new folder</p>
+            </div>
           </div>
-          <Button variant="ghost" size="icon-sm" onClick={handleClose}>
+          <Button variant="ghost" size="icon-sm" onClick={handleClose} className="rounded-lg">
             <X className="size-4" />
           </Button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-4 space-y-4">
-          <div>
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="p-5 space-y-5">
+          <div className="space-y-2">
             <Input
               type="text"
-              placeholder="Folder name"
+              placeholder="Enter folder name..."
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => {
+                setName(e.target.value);
+                if (error) setError("");
+              }}
               autoFocus
               disabled={loading}
+              className="h-12 rounded-xl text-base"
             />
             {error && (
-              <p className="text-destructive text-sm mt-1">{error}</p>
+              <p className="text-destructive text-sm flex items-center gap-1.5 animate-in slide-in-from-top-1">
+                <span className="size-1.5 rounded-full bg-destructive" />
+                {error}
+              </p>
             )}
           </div>
 
-          <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={handleClose} disabled={loading}>
+          <div className="flex justify-end gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleClose}
+              disabled={loading}
+              className="rounded-xl"
+            >
               Cancel
             </Button>
-            <Button type="submit" disabled={loading || !name.trim()}>
-              {loading ? "Creating..." : "Create"}
+            <Button
+              type="submit"
+              disabled={loading || !name.trim()}
+              className="rounded-xl gap-2 min-w-[100px]"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" />
+                  Creating...
+                </>
+              ) : (
+                <>
+                  <FolderPlus className="size-4" />
+                  Create
+                </>
+              )}
             </Button>
           </div>
         </form>
