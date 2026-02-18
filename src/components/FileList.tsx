@@ -2,7 +2,7 @@ import { Download, Trash2, Loader2, Folder, FolderOpen, Eye, GripVertical, Check
 import { Button } from "@/components/ui/button";
 import { FileIcon } from "./FileIcon";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useRef } from "react";
 
 interface FileInfo {
   name: string;
@@ -135,6 +135,8 @@ function FileItem({
   onDrop?: (targetPath: string) => void;
 }) {
   const [isDragOver, setIsDragOver] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const dragCounterRef = useRef(0);
 
   const handleClick = () => {
     if (file.isDirectory) {
@@ -163,24 +165,48 @@ function FileItem({
 
   const handleDragStart = (e: React.DragEvent) => {
     e.dataTransfer.setData("text/plain", file.path);
+    e.dataTransfer.effectAllowed = "move";
+    setIsDragging(true);
     onDragStart?.(file);
   };
 
-  const handleDragOver = (e: React.DragEvent) => {
-    if (file.isDirectory) {
-      e.preventDefault();
+  const handleDragEnd = () => {
+    setIsDragging(false);
+    setIsDragOver(false);
+    dragCounterRef.current = 0;
+  };
+
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounterRef.current++;
+    if (file.isDirectory && !isDragging) {
       setIsDragOver(true);
     }
   };
 
-  const handleDragLeave = () => {
-    setIsDragOver(false);
+  const handleDragOver = (e: React.DragEvent) => {
+    if (file.isDirectory && !isDragging) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "move";
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounterRef.current--;
+    if (dragCounterRef.current === 0) {
+      setIsDragOver(false);
+    }
   };
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     setIsDragOver(false);
-    if (file.isDirectory && onDrop) {
+    dragCounterRef.current = 0;
+    if (file.isDirectory && onDrop && !isDragging) {
       onDrop(file.path);
     }
   };
@@ -190,6 +216,8 @@ function FileItem({
       onClick={handleClick}
       draggable
       onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+      onDragEnter={handleDragEnter}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
@@ -200,7 +228,8 @@ function FileItem({
           ? "bg-primary/10 border-primary/50 shadow-sm"
           : "bg-card hover:bg-muted/50 border-transparent hover:border-border",
         file.isDirectory && "hover:bg-amber-500/5 hover:border-amber-500/30",
-        isDragOver && "bg-primary/20 border-primary scale-[1.02] shadow-lg"
+        isDragOver && "bg-primary/20 border-primary scale-[1.02] shadow-lg",
+        isDragging && "opacity-50 scale-95"
       )}
     >
       {/* Drag handle */}

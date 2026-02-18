@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 
 interface FileInfo {
   name: string;
@@ -9,6 +9,9 @@ interface FileInfo {
   path: string;
 }
 
+export type SortField = "name" | "size" | "createdAt" | "type";
+export type SortOrder = "asc" | "desc";
+
 interface UseFilesReturn {
   files: FileInfo[];
   filteredFiles: FileInfo[];
@@ -18,9 +21,16 @@ interface UseFilesReturn {
   searchQuery: string;
   filterType: string;
   selectedFiles: Set<string>;
+  canGoBack: boolean;
+  canGoForward: boolean;
+  sortField: SortField;
+  sortOrder: SortOrder;
   setCurrentPath: (path: string) => void;
   setSearchQuery: (query: string) => void;
   setFilterType: (type: string) => void;
+  setSortField: (field: SortField) => void;
+  setSortOrder: (order: SortOrder) => void;
+  toggleSort: (field: SortField) => void;
   refresh: () => Promise<void>;
   uploadFiles: (files: File[]) => Promise<void>;
   deleteFile: (path: string) => Promise<void>;
@@ -32,6 +42,8 @@ interface UseFilesReturn {
   selectAll: () => void;
   clearSelection: () => void;
   navigateToFolder: (path: string) => void;
+  goBack: () => void;
+  goForward: () => void;
 }
 
 export function useFiles(): UseFilesReturn {
@@ -42,13 +54,61 @@ export function useFiles(): UseFilesReturn {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState("");
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set());
+  const [history, setHistory] = useState<string[]>([""]);
+  const [historyIndex, setHistoryIndex] = useState(0);
+  const [sortField, setSortField] = useState<SortField>("name");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
 
-  // Filter files based on search and type
-  const filteredFiles = files.filter((file) => {
-    const matchesSearch = file.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesType = !filterType || file.type === filterType;
-    return matchesSearch && matchesType;
-  });
+  const canGoBack = historyIndex > 0;
+  const canGoForward = historyIndex < history.length - 1;
+
+  // Toggle sort - if same field, toggle order; if different field, set new field with asc
+  const toggleSort = useCallback((field: SortField) => {
+    if (field === sortField) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortOrder("asc");
+    }
+  }, [sortField, sortOrder]);
+
+  // Filter and sort files
+  const filteredFiles = useMemo(() => {
+    // Filter
+    let result = files.filter((file) => {
+      const matchesSearch = file.name.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesType = !filterType || file.type === filterType;
+      return matchesSearch && matchesType;
+    });
+
+    // Sort - folders first, then by selected field
+    result.sort((a, b) => {
+      // Folders always come first
+      if (a.isDirectory && !b.isDirectory) return -1;
+      if (!a.isDirectory && b.isDirectory) return 1;
+
+      // Compare based on sort field
+      let comparison = 0;
+      switch (sortField) {
+        case "name":
+          comparison = a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
+          break;
+        case "size":
+          comparison = a.size - b.size;
+          break;
+        case "createdAt":
+          comparison = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+          break;
+        case "type":
+          comparison = a.type.localeCompare(b.type);
+          break;
+      }
+
+      return sortOrder === "asc" ? comparison : -comparison;
+    });
+
+    return result;
+  }, [files, searchQuery, filterType, sortField, sortOrder]);
 
   const refresh = useCallback(async () => {
     try {
@@ -163,10 +223,35 @@ export function useFiles(): UseFilesReturn {
   }, []);
 
   const navigateToFolder = useCallback((path: string) => {
+    // Add to history
+    const newHistory = history.slice(0, historyIndex + 1);
+    newHistory.push(path);
+    setHistory(newHistory);
+    setHistoryIndex(newHistory.length - 1);
     setCurrentPath(path);
     setSearchQuery("");
     setFilterType("");
-  }, []);
+  }, [history, historyIndex]);
+
+  const goBack = useCallback(() => {
+    if (canGoBack) {
+      const newIndex = historyIndex - 1;
+      setHistoryIndex(newIndex);
+      setCurrentPath(history[newIndex] || "");
+      setSearchQuery("");
+      setFilterType("");
+    }
+  }, [canGoBack, historyIndex, history]);
+
+  const goForward = useCallback(() => {
+    if (canGoForward) {
+      const newIndex = historyIndex + 1;
+      setHistoryIndex(newIndex);
+      setCurrentPath(history[newIndex] || "");
+      setSearchQuery("");
+      setFilterType("");
+    }
+  }, [canGoForward, historyIndex, history]);
 
   useEffect(() => {
     refresh();
@@ -181,9 +266,16 @@ export function useFiles(): UseFilesReturn {
     searchQuery,
     filterType,
     selectedFiles,
+    canGoBack,
+    canGoForward,
+    sortField,
+    sortOrder,
     setCurrentPath,
     setSearchQuery,
     setFilterType,
+    setSortField,
+    setSortOrder,
+    toggleSort,
     refresh,
     uploadFiles,
     deleteFile,
@@ -195,5 +287,7 @@ export function useFiles(): UseFilesReturn {
     selectAll,
     clearSelection,
     navigateToFolder,
+    goBack,
+    goForward,
   };
 }

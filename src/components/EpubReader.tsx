@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import ePub, { Book, Rendition } from "epubjs";
-import { ChevronLeft, ChevronRight, BookOpen, Loader2, List, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2, List, X, AlertCircle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -27,9 +27,31 @@ export function EpubReader({ url, fileName }: EpubReaderProps) {
   const [showToc, setShowToc] = useState(false);
   const [title, setTitle] = useState("");
   const [author, setAuthor] = useState("");
+  const [retryCount, setRetryCount] = useState(0);
+
+  const cleanup = () => {
+    if (renditionRef.current) {
+      try {
+        renditionRef.current.destroy();
+      } catch (e) {
+        // Ignore cleanup errors
+      }
+      renditionRef.current = null;
+    }
+    if (bookRef.current) {
+      try {
+        bookRef.current.destroy();
+      } catch (e) {
+        // Ignore cleanup errors
+      }
+      bookRef.current = null;
+    }
+  };
 
   useEffect(() => {
     if (!containerRef.current) return;
+
+    let isMounted = true;
 
     const loadBook = async () => {
       try {
@@ -37,35 +59,61 @@ export function EpubReader({ url, fileName }: EpubReaderProps) {
         setError(null);
 
         // Clean up previous book
-        if (bookRef.current) {
-          bookRef.current.destroy();
+        cleanup();
+
+        // Clear the container
+        if (containerRef.current) {
+          containerRef.current.innerHTML = "";
         }
 
         // Fetch the book as array buffer
         const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch EPUB file (${response.status})`);
+        }
         const arrayBuffer = await response.arrayBuffer();
+
+        if (!isMounted) return;
 
         // Create book from array buffer
         const book = ePub(arrayBuffer);
         bookRef.current = book;
 
+        // Wait for book to be ready
         await book.ready;
 
+        if (!isMounted) return;
+
         // Get metadata
-        const metadata = await book.loaded.metadata;
-        setTitle(metadata.title || fileName);
-        setAuthor(metadata.creator || "Unknown Author");
+        try {
+          const metadata = await book.loaded.metadata;
+          setTitle(metadata.title || fileName);
+          setAuthor(metadata.creator || "Unknown Author");
+        } catch (metaErr) {
+          console.warn("Could not load metadata:", metaErr);
+          setTitle(fileName);
+          setAuthor("Unknown Author");
+        }
 
         // Get table of contents
-        const navigation = await book.loaded.navigation;
-        setToc(navigation.toc as TocItem[]);
+        let navigation: any = null;
+        try {
+          navigation = await book.loaded.navigation;
+          setToc(navigation?.toc as TocItem[] || []);
+        } catch (navErr) {
+          console.warn("Could not load navigation:", navErr);
+          setToc([]);
+        }
 
-        // Create rendition
-        const rendition = book.renderTo(containerRef.current!, {
+        if (!isMounted || !containerRef.current) return;
+
+        // Create rendition with scrolled flow (more reliable than paginated)
+        const rendition = book.renderTo(containerRef.current, {
           width: "100%",
           height: "100%",
           spread: "none",
-          flow: "paginated",
+          flow: "scrolled-doc", // Use scrolled mode for better compatibility
+          manager: "continuous",
         });
 
         renditionRef.current = rendition;
@@ -74,8 +122,10 @@ export function EpubReader({ url, fileName }: EpubReaderProps) {
         rendition.themes.default({
           body: {
             "font-family": "Georgia, serif",
-            "line-height": "1.7",
-            "padding": "20px",
+            "line-height": "1.8",
+            "padding": "20px 40px",
+            "max-width": "800px",
+            "margin": "0 auto",
           },
           "p": {
             "margin-bottom": "1em",
@@ -83,18 +133,78 @@ export function EpubReader({ url, fileName }: EpubReaderProps) {
           "h1, h2, h3": {
             "font-family": "system-ui, sans-serif",
           },
+          "img": {
+            "max-width": "100%",
+            "height": "auto",
+          },
         });
 
-        // Display the book
-        await rendition.display();
+        // Try different display strategies
+        let displaySuccess = false;
 
-        // Generate locations for pagination
-        await book.locations.generate(1024);
-        setTotalPages(book.locations.length());
+        // Strategy 1: Try to display using spine
+        try {
+          const spine = await book.loaded.spine;
+          if (spine && (spine as any).items && (spine as any).items.length > 0) {
+            const firstItem = (spine as any).items[0];
+            const href = firstItem.href || firstItem.url || firstItem.idref;
+            if (href) {
+              await rendition.display(href);
+              displaySuccess = true;
+            }
+          }
+        } catch (e) {
+          console.warn("Strategy 1 (spine) failed:", e);
+        }
+
+        // Strategy 2: Try to display first TOC item
+        if (!displaySuccess && navigation?.toc && navigation.toc.length > 0) {
+          try {
+            await rendition.display(navigation.toc[0].href);
+            displaySuccess = true;
+          } catch (e) {
+            console.warn("Strategy 2 (TOC) failed:", e);
+          }
+        }
+
+        // Strategy 3: Try to display by index
+        if (!displaySuccess) {
+          try {
+            await rendition.display(0);
+            displaySuccess = true;
+          } catch (e) {
+            console.warn("Strategy 3 (index 0) failed:", e);
+          }
+        }
+
+        // Strategy 4: Try empty display
+        if (!displaySuccess) {
+          try {
+            await rendition.display();
+            displaySuccess = true;
+          } catch (e) {
+            console.warn("Strategy 4 (empty) failed:", e);
+          }
+        }
+
+        if (!displaySuccess) {
+          throw new Error("Could not display any section of the EPUB");
+        }
+
+        if (!isMounted) return;
+
+        // Generate locations for pagination (optional, don't fail if it doesn't work)
+        try {
+          await book.locations.generate(2048);
+          setTotalPages(book.locations.length());
+        } catch (locErr) {
+          console.warn("Could not generate locations:", locErr);
+          setTotalPages(0);
+        }
 
         // Handle relocation
-        rendition.on("relocated", (location: { start: { location: number } }) => {
-          if (location.start) {
+        rendition.on("relocated", (location: any) => {
+          if (location?.start?.location !== undefined) {
             setCurrentPage(location.start.location + 1);
           }
         });
@@ -102,19 +212,24 @@ export function EpubReader({ url, fileName }: EpubReaderProps) {
         setLoading(false);
       } catch (err) {
         console.error("Error loading EPUB:", err);
-        setError("Failed to load EPUB file. The file may be corrupted or in an unsupported format.");
-        setLoading(false);
+        if (isMounted) {
+          setError(
+            err instanceof Error
+              ? err.message
+              : "Failed to load EPUB file. The file may be corrupted or in an unsupported format."
+          );
+          setLoading(false);
+        }
       }
     };
 
     loadBook();
 
     return () => {
-      if (bookRef.current) {
-        bookRef.current.destroy();
-      }
+      isMounted = false;
+      cleanup();
     };
-  }, [url, fileName]);
+  }, [url, fileName, retryCount]);
 
   const goNext = () => {
     renditionRef.current?.next();
@@ -127,6 +242,10 @@ export function EpubReader({ url, fileName }: EpubReaderProps) {
   const goToChapter = (href: string) => {
     renditionRef.current?.display(href);
     setShowToc(false);
+  };
+
+  const handleRetry = () => {
+    setRetryCount((c) => c + 1);
   };
 
   // Keyboard navigation
@@ -146,9 +265,15 @@ export function EpubReader({ url, fileName }: EpubReaderProps) {
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center h-96 p-8 text-center">
-        <BookOpen className="size-16 text-muted-foreground/50 mb-4" />
+        <div className="size-16 rounded-full bg-destructive/10 flex items-center justify-center mb-4">
+          <AlertCircle className="size-8 text-destructive" />
+        </div>
         <h3 className="text-lg font-medium mb-2">Unable to load EPUB</h3>
-        <p className="text-sm text-muted-foreground max-w-md">{error}</p>
+        <p className="text-sm text-muted-foreground max-w-md mb-4">{error}</p>
+        <Button onClick={handleRetry} variant="outline" className="gap-2">
+          <RefreshCw className="size-4" />
+          Try Again
+        </Button>
       </div>
     );
   }
@@ -191,9 +316,15 @@ export function EpubReader({ url, fileName }: EpubReaderProps) {
               </Button>
             </div>
             <div className="flex-1 overflow-auto p-2">
-              {toc.map((item, index) => (
-                <TocEntry key={index} item={item} onSelect={goToChapter} />
-              ))}
+              {toc.length > 0 ? (
+                toc.map((item, index) => (
+                  <TocEntry key={index} item={item} onSelect={goToChapter} />
+                ))
+              ) : (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  No table of contents available
+                </p>
+              )}
             </div>
           </div>
         )}
@@ -215,7 +346,7 @@ export function EpubReader({ url, fileName }: EpubReaderProps) {
           <div
             ref={containerRef}
             className={cn(
-              "flex-1 h-full mx-12 bg-background",
+              "flex-1 h-full mx-12 bg-background overflow-auto",
               loading && "flex items-center justify-center"
             )}
           >
