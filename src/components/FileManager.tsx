@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Sidebar } from "./Sidebar";
 import { Toolbar } from "./Toolbar";
 import type { ViewMode } from "./Toolbar";
@@ -15,7 +15,7 @@ import { SettingsDialog } from "./SettingsDialog";
 import { ThemeToggle } from "./ThemeToggle";
 import { useFiles } from "@/hooks/useFiles";
 import { cn } from "@/lib/utils";
-import { Menu, X, Settings } from "lucide-react";
+import { Menu, X, Settings, ArrowUpFromLine } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface FileInfo {
@@ -52,6 +52,8 @@ export function FileManager() {
     error,
     currentPath,
     searchQuery,
+    showHidden,
+    toggleShowHidden,
     selectedFiles,
     canGoBack,
     canGoForward,
@@ -91,6 +93,8 @@ export function FileManager() {
   const [showSettings, setShowSettings] = useState(false);
   const [moveFileTarget, setMoveFileTarget] = useState<FileInfo | null>(null);
   const [draggedFile, setDraggedFile] = useState<FileInfo | null>(null);
+  const [isWindowDragging, setIsWindowDragging] = useState(false);
+  const windowDragCounter = useRef(0);
 
   // Adjust UI based on screen size
   useEffect(() => {
@@ -105,6 +109,59 @@ export function FileManager() {
       setShowPreview(false);
     }
   }, [isDesktop, isTablet, isMobile]);
+
+  // Global drag handling
+  useEffect(() => {
+    const handleDragEnter = (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      windowDragCounter.current++;
+      
+      // Only show overlay if dragging actual files from outside the window
+      const items = e.dataTransfer?.items;
+      if (items && items.length > 0 && items[0]?.kind === "file") {
+        setIsWindowDragging(true);
+      }
+    };
+
+    const handleDragLeave = (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      windowDragCounter.current--;
+      if (windowDragCounter.current === 0) {
+        setIsWindowDragging(false);
+      }
+    };
+
+    const handleDragOver = (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+    };
+
+    const handleDrop = (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsWindowDragging(false);
+      windowDragCounter.current = 0;
+      
+      const files = Array.from(e.dataTransfer?.files || []);
+      if (files.length > 0) {
+        uploadFiles(files);
+      }
+    };
+
+    window.addEventListener("dragenter", handleDragEnter);
+    window.addEventListener("dragleave", handleDragLeave);
+    window.addEventListener("dragover", handleDragOver);
+    window.addEventListener("drop", handleDrop);
+
+    return () => {
+      window.removeEventListener("dragenter", handleDragEnter);
+      window.removeEventListener("dragleave", handleDragLeave);
+      window.removeEventListener("dragover", handleDragOver);
+      window.removeEventListener("drop", handleDrop);
+    };
+  }, [uploadFiles]);
 
   // Get folders for sidebar
   const folders = files.filter((f) => f.isDirectory);
@@ -160,6 +217,21 @@ export function FileManager() {
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/5 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-primary/5 rounded-full blur-[120px] pointer-events-none" />
       
+      {/* Global Drop Overlay */}
+      {isWindowDragging && (
+        <div className="fixed inset-0 z-[100] bg-primary/10 backdrop-blur-md flex items-center justify-center p-8 animate-in fade-in duration-300">
+          <div className="w-full max-w-2xl aspect-video border-4 border-dashed border-primary rounded-[3rem] bg-background/80 flex flex-col items-center justify-center gap-6 shadow-2xl animate-in zoom-in duration-500">
+            <div className="size-24 rounded-full bg-primary/20 flex items-center justify-center animate-bounce">
+              <ArrowUpFromLine className="size-12 text-primary" />
+            </div>
+            <div className="text-center space-y-2">
+              <h2 className="text-3xl font-bold tracking-tight text-gradient">Drop to Upload</h2>
+              <p className="text-muted-foreground font-medium">Your files will be uploaded to the current folder</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Mobile Header */}
       {isMobile && (
         <div className="flex items-center justify-between px-4 py-3 border-b glass z-30">
@@ -245,11 +317,12 @@ export function FileManager() {
                 selectedCount={selectedFiles.size}
                 showSidebar={showSidebar}
                 onToggleSidebar={() => setShowSidebar(!showSidebar)}
-                showPreview={showPreview}
-                onTogglePreview={() => setShowPreview(!showPreview)}
-                searchQuery={searchQuery}
-                onSearchChange={setSearchQuery}
-                loading={loading}
+                              showPreview={showPreview}
+                              onTogglePreview={() => setShowPreview(!showPreview)}
+                              showHidden={showHidden}
+                              onToggleHidden={toggleShowHidden}
+                              searchQuery={searchQuery}
+                              onSearchChange={setSearchQuery}                loading={loading}
                 sortField={sortField}
                 sortOrder={sortOrder}
                 onToggleSort={toggleSort}

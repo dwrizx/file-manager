@@ -24,6 +24,7 @@ interface UseFilesReturn {
   error: string | null;
   currentPath: string;
   searchQuery: string;
+  showHidden: boolean;
   filterType: string;
   selectedFiles: Set<string>;
   canGoBack: boolean;
@@ -34,6 +35,7 @@ interface UseFilesReturn {
   activeLocationIndex: number;
   setCurrentPath: (path: string) => void;
   setSearchQuery: (query: string) => void;
+  toggleShowHidden: () => void;
   setFilterType: (type: string) => void;
   setSortField: (field: SortField) => void;
   setSortOrder: (order: SortOrder) => void;
@@ -60,6 +62,7 @@ export function useFiles(): UseFilesReturn {
   const [error, setError] = useState<string | null>(null);
   const [currentPath, setCurrentPath] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [showHidden, setShowHidden] = useState(false);
   const [filterType, setFilterType] = useState("");
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set());
   const [history, setHistory] = useState<string[]>([""]);
@@ -71,6 +74,10 @@ export function useFiles(): UseFilesReturn {
 
   const canGoBack = historyIndex > 0;
   const canGoForward = historyIndex < history.length - 1;
+
+  const toggleShowHidden = useCallback(() => {
+    setShowHidden(prev => !prev);
+  }, []);
 
   // Fetch config on mount
   useEffect(() => {
@@ -128,7 +135,9 @@ export function useFiles(): UseFilesReturn {
     let result = files.filter((file) => {
       const matchesSearch = file.name.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesType = !filterType || file.type === filterType;
-      return matchesSearch && matchesType;
+      const isHidden = file.name.startsWith(".");
+      const matchesHidden = showHidden || !isHidden;
+      return matchesSearch && matchesType && matchesHidden;
     });
 
     // Sort - folders first, then by selected field
@@ -158,7 +167,7 @@ export function useFiles(): UseFilesReturn {
     });
 
     return result;
-  }, [files, searchQuery, filterType, sortField, sortOrder]);
+  }, [files, searchQuery, filterType, sortField, sortOrder, showHidden]);
 
   const refresh = useCallback(async () => {
     try {
@@ -314,14 +323,18 @@ export function useFiles(): UseFilesReturn {
     error,
     currentPath,
     searchQuery,
+    showHidden,
     filterType,
     selectedFiles,
     canGoBack,
     canGoForward,
     sortField,
     sortOrder,
+    locations,
+    activeLocationIndex,
     setCurrentPath,
     setSearchQuery,
+    toggleShowHidden,
     setFilterType,
     setSortField,
     setSortOrder,
@@ -339,8 +352,6 @@ export function useFiles(): UseFilesReturn {
     navigateToFolder,
     goBack,
     goForward,
-    locations,
-    activeLocationIndex,
     switchLocation,
   };
 }

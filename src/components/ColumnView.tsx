@@ -60,7 +60,7 @@ export function ColumnView({
     newColumns.push({
       path: "",
       files: [],
-      selectedPath: pathParts.length > 0 ? pathParts[0] : null,
+      selectedPath: pathParts[0] ?? null,
     });
 
     // Add intermediate path columns
@@ -69,7 +69,7 @@ export function ColumnView({
       newColumns.push({
         path,
         files: [],
-        selectedPath: pathParts.length > i + 1 ? pathParts.slice(0, i + 2).join("/") : null,
+        selectedPath: pathParts[i + 1] ? pathParts.slice(0, i + 2).join("/") : null,
       });
     }
 
@@ -81,13 +81,16 @@ export function ColumnView({
   useEffect(() => {
     if (columns.length > 0) {
       const lastColumn = columns[columns.length - 1];
-      if (lastColumn.path === currentPath || (lastColumn.path === "" && currentPath === "")) {
+      if (lastColumn && (lastColumn.path === currentPath || (lastColumn.path === "" && currentPath === ""))) {
         setColumns(prev => {
           const updated = [...prev];
-          updated[updated.length - 1] = {
-            ...lastColumn,
-            files,
-          };
+          const last = updated[updated.length - 1];
+          if (last) {
+            updated[updated.length - 1] = {
+              ...last,
+              files,
+            };
+          }
           return updated;
         });
       }

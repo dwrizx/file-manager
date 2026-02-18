@@ -19,6 +19,8 @@ import {
   ArrowDown,
   Check,
   Settings,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -41,6 +43,8 @@ interface ToolbarProps {
   onToggleSidebar: () => void;
   showPreview: boolean;
   onTogglePreview: () => void;
+  showHidden: boolean;
+  onToggleHidden: () => void;
   searchQuery: string;
   onSearchChange: (query: string) => void;
   loading?: boolean;
@@ -72,6 +76,8 @@ export function Toolbar({
   onToggleSidebar,
   showPreview,
   onTogglePreview,
+  showHidden,
+  onToggleHidden,
   searchQuery,
   onSearchChange,
   loading,
@@ -289,8 +295,25 @@ export function Toolbar({
 
       <div className="w-px h-5 bg-border/40 mx-1 hidden sm:block" />
 
-      {/* Settings & Preview */}
+      {/* Settings, Hidden & Preview */}
       <div className="flex items-center gap-1">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onToggleHidden}
+          title={showHidden ? "Hide hidden files" : "Show hidden files"}
+          className={cn(
+            "shrink-0 hover:bg-muted/50 rounded-xl",
+            showHidden && "text-primary bg-primary/5"
+          )}
+        >
+          {showHidden ? (
+            <Eye className="size-4.5" />
+          ) : (
+            <EyeOff className="size-4.5" />
+          )}
+        </Button>
+
         <Button
           variant="ghost"
           size="icon"
