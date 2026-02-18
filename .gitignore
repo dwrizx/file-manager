@@ -44,3 +44,6 @@ Thumbs.db
 
 # Optional: uncomment if you don't want to commit lockfile
 # bun.lockb
+
+# data folder (local only, jangan di-push ke GitHub)
+data/
