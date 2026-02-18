@@ -49,7 +49,10 @@ export function DropZone({ onUpload, disabled, compact = false }: DropZoneProps)
     const files = Array.from(e.dataTransfer.files);
     if (files.length > 0) {
       setIsUploading(true);
-      setUploadProgress({ name: files[0].name, count: files.length });
+      const firstFile = files[0];
+      if (firstFile) {
+        setUploadProgress({ name: firstFile.name, count: files.length });
+      }
       try {
         await onUpload(files);
       } finally {
@@ -69,7 +72,10 @@ export function DropZone({ onUpload, disabled, compact = false }: DropZoneProps)
     const files = Array.from(e.target.files || []);
     if (files.length > 0) {
       setIsUploading(true);
-      setUploadProgress({ name: files[0].name, count: files.length });
+      const firstFile = files[0];
+      if (firstFile) {
+        setUploadProgress({ name: firstFile.name, count: files.length });
+      }
       try {
         await onUpload(files);
       } finally {

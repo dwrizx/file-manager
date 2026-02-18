@@ -1,7 +1,6 @@
 import { readdir, stat, mkdir, unlink, rm } from "node:fs/promises";
 import { join, dirname } from "node:path";
-
-const DATA_DIR = join(import.meta.dir, "../../data");
+import { loadConfig, getDataDir } from "../lib/config";
 
 export interface FileInfo {
   name: string;
@@ -12,13 +11,20 @@ export interface FileInfo {
   path: string;
 }
 
+async function getRoot(): Promise<string> {
+    await loadConfig();
+    return getDataDir();
+}
+
 export async function ensureDataDir(): Promise<void> {
-  await mkdir(DATA_DIR, { recursive: true });
+  const root = await getRoot();
+  await mkdir(root, { recursive: true });
 }
 
 export async function listFiles(subPath: string = ""): Promise<FileInfo[]> {
   await ensureDataDir();
-  const targetDir = join(DATA_DIR, subPath);
+  const root = await getRoot();
+  const targetDir = join(root, subPath);
 
   try {
     const entries = await readdir(targetDir);
@@ -53,8 +59,9 @@ export async function listFiles(subPath: string = ""): Promise<FileInfo[]> {
 
 export async function saveFile(name: string, data: Uint8Array, subPath: string = ""): Promise<FileInfo> {
   await ensureDataDir();
+  const root = await getRoot();
   const safeName = name.replace(/[^a-zA-Z0-9._-]/g, "_");
-  const targetDir = subPath ? join(DATA_DIR, subPath) : DATA_DIR;
+  const targetDir = subPath ? join(root, subPath) : root;
   await mkdir(targetDir, { recursive: true });
 
   const filePath = join(targetDir, safeName);
@@ -74,8 +81,9 @@ export async function saveFile(name: string, data: Uint8Array, subPath: string =
 
 export async function createFolder(name: string, subPath: string = ""): Promise<FileInfo> {
   await ensureDataDir();
+  const root = await getRoot();
   const safeName = name.replace(/[^a-zA-Z0-9._-]/g, "_");
-  const targetDir = subPath ? join(DATA_DIR, subPath, safeName) : join(DATA_DIR, safeName);
+  const targetDir = subPath ? join(root, subPath, safeName) : join(root, safeName);
 
   await mkdir(targetDir, { recursive: true });
   const stats = await stat(targetDir);
@@ -93,8 +101,9 @@ export async function createFolder(name: string, subPath: string = ""): Promise<
 
 export async function getFile(filePath: string): Promise<Bun.BunFile | null> {
   await ensureDataDir();
+  const root = await getRoot();
   const safePath = filePath.split('/').map(p => p.replace(/[^a-zA-Z0-9._-]/g, "_")).join('/');
-  const fullPath = join(DATA_DIR, safePath);
+  const fullPath = join(root, safePath);
   const file = Bun.file(fullPath);
   if (await file.exists()) {
     return file;
@@ -104,8 +113,9 @@ export async function getFile(filePath: string): Promise<Bun.BunFile | null> {
 
 export async function deleteFile(filePath: string): Promise<boolean> {
   await ensureDataDir();
+  const root = await getRoot();
   const safePath = filePath.split('/').map(p => p.replace(/[^a-zA-Z0-9._-]/g, "_")).join('/');
-  const fullPath = join(DATA_DIR, safePath);
+  const fullPath = join(root, safePath);
 
   try {
     const stats = await stat(fullPath);
@@ -122,11 +132,12 @@ export async function deleteFile(filePath: string): Promise<boolean> {
 
 export async function moveFile(sourcePath: string, destPath: string): Promise<boolean> {
   await ensureDataDir();
+  const root = await getRoot();
   const safeSource = sourcePath.split('/').map(p => p.replace(/[^a-zA-Z0-9._-]/g, "_")).join('/');
   const safeDest = destPath.split('/').map(p => p.replace(/[^a-zA-Z0-9._-]/g, "_")).join('/');
 
-  const fullSource = join(DATA_DIR, safeSource);
-  const fullDest = join(DATA_DIR, safeDest);
+  const fullSource = join(root, safeSource);
+  const fullDest = join(root, safeDest);
 
   try {
     const file = Bun.file(fullSource);
@@ -167,6 +178,7 @@ function getFileType(filename: string): string {
     "7z": "archive",
     tar: "archive",
     gz: "archive",
+    "iso": "archive",
   };
   return types[ext] || "file";
 }
@@ -178,5 +190,3 @@ export function formatBytes(bytes: number): string {
   const i = Math.min(Math.floor(Math.log(bytes) / Math.log(k)), sizes.length - 1);
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
 }
-
-export { DATA_DIR };

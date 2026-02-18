@@ -12,6 +12,11 @@ interface FileInfo {
 export type SortField = "name" | "size" | "createdAt" | "type";
 export type SortOrder = "asc" | "desc";
 
+interface Location {
+  name: string;
+  path: string;
+}
+
 interface UseFilesReturn {
   files: FileInfo[];
   filteredFiles: FileInfo[];
@@ -25,6 +30,8 @@ interface UseFilesReturn {
   canGoForward: boolean;
   sortField: SortField;
   sortOrder: SortOrder;
+  locations: Location[];
+  activeLocationIndex: number;
   setCurrentPath: (path: string) => void;
   setSearchQuery: (query: string) => void;
   setFilterType: (type: string) => void;
@@ -44,6 +51,7 @@ interface UseFilesReturn {
   navigateToFolder: (path: string) => void;
   goBack: () => void;
   goForward: () => void;
+  switchLocation: (index: number) => Promise<void>;
 }
 
 export function useFiles(): UseFilesReturn {
@@ -58,9 +66,51 @@ export function useFiles(): UseFilesReturn {
   const [historyIndex, setHistoryIndex] = useState(0);
   const [sortField, setSortField] = useState<SortField>("name");
   const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
+  const [locations, setLocations] = useState<Location[]>([]);
+  const [activeLocationIndex, setActiveLocationIndex] = useState(0);
 
   const canGoBack = historyIndex > 0;
   const canGoForward = historyIndex < history.length - 1;
+
+  // Fetch config on mount
+  useEffect(() => {
+    const fetchConfig = async () => {
+      try {
+        const response = await fetch("/api/config");
+        if (response.ok) {
+          const config = await response.json();
+          setLocations(config.locations);
+          setActiveLocationIndex(config.activeLocationIndex);
+        }
+      } catch (err) {
+        console.error("Failed to fetch config", err);
+      }
+    };
+    fetchConfig();
+  }, []);
+
+  const switchLocation = useCallback(async (index: number) => {
+    try {
+      setLoading(true);
+      const response = await fetch("/api/config", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ activeLocationIndex: index }),
+      });
+      if (response.ok) {
+        const config = await response.json();
+        setActiveLocationIndex(config.activeLocationIndex);
+        setCurrentPath("");
+        setHistory([""]);
+        setHistoryIndex(0);
+        // refresh will be triggered by useEffect [currentPath] or [activeLocationIndex]
+      }
+    } catch (err) {
+      setError("Failed to switch location");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   // Toggle sort - if same field, toggle order; if different field, set new field with asc
   const toggleSort = useCallback((field: SortField) => {
@@ -124,7 +174,7 @@ export function useFiles(): UseFilesReturn {
     } finally {
       setLoading(false);
     }
-  }, [currentPath]);
+  }, [currentPath, activeLocationIndex]);
 
   const uploadFiles = useCallback(async (filesToUpload: File[]) => {
     const formData = new FormData();
@@ -289,5 +339,8 @@ export function useFiles(): UseFilesReturn {
     navigateToFolder,
     goBack,
     goForward,
+    locations,
+    activeLocationIndex,
+    switchLocation,
   };
 }

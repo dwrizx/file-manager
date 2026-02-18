@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Sidebar } from "./Sidebar";
-import { Toolbar, ViewMode } from "./Toolbar";
+import { Toolbar } from "./Toolbar";
+import type { ViewMode } from "./Toolbar";
 import { IconView } from "./IconView";
 import { ColumnView } from "./ColumnView";
 import { FileList } from "./FileList";
@@ -10,10 +11,11 @@ import { Breadcrumb } from "./Breadcrumb";
 import { FilePreview } from "./FilePreview";
 import { CreateFolderDialog } from "./CreateFolderDialog";
 import { MoveFileDialog } from "./MoveFileDialog";
+import { SettingsDialog } from "./SettingsDialog";
 import { ThemeToggle } from "./ThemeToggle";
 import { useFiles } from "@/hooks/useFiles";
 import { cn } from "@/lib/utils";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface FileInfo {
@@ -69,6 +71,9 @@ export function FileManager() {
     navigateToFolder,
     goBack,
     goForward,
+    locations,
+    activeLocationIndex,
+    switchLocation,
   } = useFiles();
 
   // Responsive breakpoints
@@ -83,6 +88,7 @@ export function FileManager() {
   const [focusedFile, setFocusedFile] = useState<FileInfo | null>(null);
   const [previewFile, setPreviewFile] = useState<FileInfo | null>(null);
   const [showCreateFolder, setShowCreateFolder] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [moveFileTarget, setMoveFileTarget] = useState<FileInfo | null>(null);
   const [draggedFile, setDraggedFile] = useState<FileInfo | null>(null);
 
@@ -149,28 +155,40 @@ export function FileManager() {
   };
 
   return (
-    <div className="h-screen w-screen flex flex-col bg-background overflow-hidden">
+    <div className="h-screen w-screen flex flex-col bg-background overflow-hidden relative">
+      {/* Decorative background elements */}
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/5 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-primary/5 rounded-full blur-[120px] pointer-events-none" />
+      
       {/* Mobile Header */}
       {isMobile && (
-        <div className="flex items-center justify-between px-3 py-2 border-b bg-card/80 backdrop-blur-sm">
+        <div className="flex items-center justify-between px-4 py-3 border-b glass z-30">
           <Button
             variant="ghost"
-            size="icon-sm"
+            size="icon"
             onClick={() => setShowSidebar(!showSidebar)}
+            className="hover:bg-primary/10"
           >
             <Menu className="size-5" />
           </Button>
-          <h1 className="font-semibold text-sm">File Magnet</h1>
-          <ThemeToggle />
+          <h1 className="font-bold text-lg tracking-tight text-gradient">File Magnet</h1>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setShowSettings(true)}
+            className="hover:bg-primary/10"
+          >
+            <Settings className="size-5" />
+          </Button>
         </div>
       )}
 
       {/* Main Layout */}
-      <div className="flex-1 flex overflow-hidden relative">
+      <div className="flex-1 flex overflow-hidden relative z-10">
         {/* Mobile Sidebar Overlay */}
         {isMobile && showSidebar && (
           <div
-            className="fixed inset-0 bg-black/50 z-40 animate-in fade-in duration-200"
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 animate-in fade-in duration-300"
             onClick={() => setShowSidebar(false)}
           />
         )}
@@ -178,20 +196,20 @@ export function FileManager() {
         {/* Sidebar */}
         {(showSidebar || !isMobile) && showSidebar && (
           <div className={cn(
-            "shrink-0 animate-in duration-200",
+            "shrink-0 transition-all duration-300 ease-in-out",
             isMobile
-              ? "fixed inset-y-0 left-0 z-50 w-[280px] slide-in-from-left shadow-2xl"
-              : "w-[220px] slide-in-from-left"
+              ? "fixed inset-y-0 left-0 z-50 w-[280px] shadow-2xl glass border-r-0"
+              : "w-[240px] border-r bg-card/30 backdrop-blur-xl"
           )}>
             {isMobile && (
-              <div className="absolute top-3 right-3 z-10">
+              <div className="absolute top-4 right-4 z-10">
                 <Button
                   variant="ghost"
-                  size="icon-sm"
+                  size="icon"
                   onClick={() => setShowSidebar(false)}
-                  className="bg-background/80 backdrop-blur-sm"
+                  className="rounded-full hover:bg-destructive/10 hover:text-destructive"
                 >
-                  <X className="size-4" />
+                  <X className="size-5" />
                 </Button>
               </div>
             )}
@@ -202,96 +220,97 @@ export function FileManager() {
                 closeMobileOverlays();
               }}
               folders={folders}
+              locations={locations}
+              activeLocationIndex={activeLocationIndex}
+              onSwitchLocation={switchLocation}
             />
           </div>
         )}
 
         {/* Main Content Area */}
-        <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-          {/* Toolbar - hide on mobile, show simplified version */}
+        <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative bg-background/20">
+          {/* Toolbar */}
           {!isMobile && (
-            <Toolbar
-              viewMode={viewMode}
-              onViewModeChange={setViewMode}
-              canGoBack={canGoBack}
-              canGoForward={canGoForward}
-              onBack={goBack}
-              onForward={goForward}
-              onRefresh={refresh}
-              onNewFolder={() => setShowCreateFolder(true)}
-              onDeleteSelected={handleDeleteSelected}
-              selectedCount={selectedFiles.size}
-              showSidebar={showSidebar}
-              onToggleSidebar={() => setShowSidebar(!showSidebar)}
-              showPreview={showPreview}
-              onTogglePreview={() => setShowPreview(!showPreview)}
-              searchQuery={searchQuery}
-              onSearchChange={setSearchQuery}
-              loading={loading}
-              sortField={sortField}
-              sortOrder={sortOrder}
-              onToggleSort={toggleSort}
-            />
+            <div className="glass-card mx-4 mt-4 rounded-2xl shadow-sm border border-border/40">
+              <Toolbar
+                viewMode={viewMode}
+                onViewModeChange={setViewMode}
+                canGoBack={canGoBack}
+                canGoForward={canGoForward}
+                onBack={goBack}
+                onForward={goForward}
+                onRefresh={refresh}
+                onNewFolder={() => setShowCreateFolder(true)}
+                onDeleteSelected={handleDeleteSelected}
+                selectedCount={selectedFiles.size}
+                showSidebar={showSidebar}
+                onToggleSidebar={() => setShowSidebar(!showSidebar)}
+                showPreview={showPreview}
+                onTogglePreview={() => setShowPreview(!showPreview)}
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+                loading={loading}
+                sortField={sortField}
+                sortOrder={sortOrder}
+                onToggleSort={toggleSort}
+                onSettings={() => setShowSettings(true)}
+              />
+            </div>
           )}
 
           {/* Header with breadcrumb and theme toggle */}
           <div className={cn(
-            "flex items-center justify-between border-b bg-card/50",
-            isMobile ? "px-3 py-2" : "px-4 py-2"
+            "flex items-center justify-between mx-4 mt-4 mb-2",
+            isMobile ? "px-0" : ""
           )}>
-            <Breadcrumb path={currentPath} onNavigate={navigateToFolder} />
-            {!isMobile && <ThemeToggle />}
+            <div className="glass-card px-4 py-2 rounded-xl flex-1 mr-4 overflow-hidden border border-border/40">
+              <Breadcrumb path={currentPath} onNavigate={navigateToFolder} />
+            </div>
+            {!isMobile && (
+              <div className="glass-card p-1 rounded-xl border border-border/40">
+                <ThemeToggle />
+              </div>
+            )}
           </div>
 
           {/* Mobile Actions Bar */}
           {isMobile && (
-            <div className="flex items-center gap-2 px-3 py-2 border-b bg-muted/30 overflow-x-auto">
+            <div className="flex items-center gap-2 px-4 py-2 mb-2 overflow-x-auto no-scrollbar">
               <Button
-                variant="outline"
+                variant="secondary"
                 size="sm"
                 onClick={goBack}
                 disabled={!canGoBack}
-                className="shrink-0"
+                className="shrink-0 rounded-full glass"
               >
                 Back
               </Button>
               <Button
-                variant="outline"
+                variant="secondary"
                 size="sm"
                 onClick={() => setShowCreateFolder(true)}
-                className="shrink-0"
+                className="shrink-0 rounded-full glass"
               >
                 New Folder
               </Button>
               <Button
-                variant="outline"
+                variant="secondary"
                 size="sm"
                 onClick={refresh}
                 disabled={loading}
-                className="shrink-0"
+                className="shrink-0 rounded-full glass"
               >
                 Refresh
               </Button>
-              {selectedFiles.size > 0 && (
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={handleDeleteSelected}
-                  className="shrink-0"
-                >
-                  Delete ({selectedFiles.size})
-                </Button>
-              )}
             </div>
           )}
 
           {/* Content */}
-          <div className="flex-1 flex overflow-hidden">
-            {/* File Browser */}
-            <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-              {/* Drop zone - compact on mobile/tablet */}
+          <div className="flex-1 flex overflow-hidden px-4 pb-4">
+            <div className="glass-card flex-1 flex flex-col min-w-0 overflow-hidden rounded-2xl border border-border/40 shadow-sm relative">
+              {/* Drop zone */}
               <div className={cn(
-                "border-b",
+                "border-b border-border/40",
                 isMobile ? "px-3 py-2" : "px-4 py-3"
               )}>
                 <DropZone
@@ -303,110 +322,98 @@ export function FileManager() {
 
               {/* Mobile Search */}
               {isMobile && (
-                <div className="px-3 py-2 border-b">
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search files..."
-                    className="w-full h-9 px-3 text-sm bg-muted/50 border-0 rounded-lg placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/30"
-                  />
+                <div className="px-4 py-3 border-b border-border/40 bg-muted/20">
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Search files..."
+                      className="w-full h-10 px-4 py-2 text-sm bg-background/50 border border-border/40 rounded-xl placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                    />
+                  </div>
                 </div>
               )}
 
               {/* Error display */}
               {error && (
-                <div className={cn(
-                  "mt-3 p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm flex items-center gap-2",
-                  isMobile ? "mx-3" : "mx-4"
-                )}>
+                <div className="m-4 p-4 rounded-xl bg-destructive/5 border border-destructive/20 text-destructive text-sm flex items-center gap-3 animate-in fade-in zoom-in duration-300">
                   <span className="size-2 rounded-full bg-destructive animate-pulse" />
                   {error}
                 </div>
               )}
 
               {/* Files content */}
-              <div className="flex-1 overflow-auto">
+              <div className="flex-1 overflow-auto custom-scrollbar">
                 {loading ? (
-                  <div className="flex items-center justify-center h-64">
-                    <div className="size-10 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+                  <div className="flex flex-col items-center justify-center h-full gap-4">
+                    <div className="size-12 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
+                    <p className="text-sm text-muted-foreground animate-pulse font-medium">Loading your files...</p>
                   </div>
-                ) : viewMode === "icon" || isMobile ? (
-                  <IconView
-                    files={filteredFiles}
-                    selectedFiles={selectedFiles}
-                    focusedFile={focusedFile}
-                    onSelect={handleSelectFile}
-                    onToggleSelect={toggleSelect}
-                    onNavigate={navigateToFolder}
-                    onPreview={setPreviewFile}
-                    onDownload={downloadFile}
-                    onDelete={handleDeleteFile}
-                    onMove={setMoveFileTarget}
-                    onDragStart={setDraggedFile}
-                    onDrop={handleDrop}
-                  />
-                ) : viewMode === "column" ? (
-                  <ColumnView
-                    files={filteredFiles}
-                    selectedFiles={selectedFiles}
-                    focusedFile={focusedFile}
-                    currentPath={currentPath}
-                    onSelect={handleSelectFile}
-                    onToggleSelect={toggleSelect}
-                    onNavigate={navigateToFolder}
-                    onPreview={setPreviewFile}
-                  />
                 ) : (
-                  <FileList
-                    files={filteredFiles}
-                    loading={false}
-                    selectedFiles={selectedFiles}
-                    onDownload={downloadFile}
-                    onDelete={handleDeleteFile}
-                    onNavigate={navigateToFolder}
-                    onPreview={setPreviewFile}
-                    onToggleSelect={toggleSelect}
-                    onMoveFile={setMoveFileTarget}
-                    onDragStart={setDraggedFile}
-                    onDrop={handleDrop}
-                  />
+                  <div className="p-1">
+                    {viewMode === "icon" || isMobile ? (
+                      <IconView
+                        files={filteredFiles}
+                        selectedFiles={selectedFiles}
+                        focusedFile={focusedFile}
+                        onSelect={handleSelectFile}
+                        onToggleSelect={toggleSelect}
+                        onNavigate={navigateToFolder}
+                        onPreview={setPreviewFile}
+                        onDownload={downloadFile}
+                        onDelete={handleDeleteFile}
+                        onMove={setMoveFileTarget}
+                        onDragStart={setDraggedFile}
+                        onDrop={handleDrop}
+                      />
+                    ) : viewMode === "column" ? (
+                      <ColumnView
+                        files={filteredFiles}
+                        selectedFiles={selectedFiles}
+                        focusedFile={focusedFile}
+                        currentPath={currentPath}
+                        onSelect={handleSelectFile}
+                        onToggleSelect={toggleSelect}
+                        onNavigate={navigateToFolder}
+                        onPreview={setPreviewFile}
+                      />
+                    ) : (
+                      <FileList
+                        files={filteredFiles}
+                        loading={false}
+                        selectedFiles={selectedFiles}
+                        onDownload={downloadFile}
+                        onDelete={handleDeleteFile}
+                        onNavigate={navigateToFolder}
+                        onPreview={setPreviewFile}
+                        onToggleSelect={toggleSelect}
+                        onMoveFile={setMoveFileTarget}
+                        onDragStart={setDraggedFile}
+                        onDrop={handleDrop}
+                      />
+                    )}
+                  </div>
                 )}
               </div>
 
               {/* Status bar */}
               <div className={cn(
-                "py-2 border-t bg-muted/30 text-xs text-muted-foreground flex items-center justify-between",
-                isMobile ? "px-3" : "px-4"
+                "py-2.5 border-t border-border/40 bg-muted/10 text-[11px] font-medium text-muted-foreground flex items-center justify-between",
+                isMobile ? "px-4" : "px-6"
               )}>
-                <span>{filteredFiles.length} {filteredFiles.length === 1 ? "item" : "items"}</span>
-                {searchQuery && <span className="hidden sm:inline">Searching: "{searchQuery}"</span>}
-                {selectedFiles.size > 0 && <span>{selectedFiles.size} selected</span>}
+                <div className="flex items-center gap-4">
+                  <span>{filteredFiles.length} {filteredFiles.length === 1 ? "item" : "items"}</span>
+                  {selectedFiles.size > 0 && <span className="text-primary">{selectedFiles.size} selected</span>}
+                </div>
+                {searchQuery && <span className="hidden sm:inline opacity-70">Searching: "{searchQuery}"</span>}
               </div>
             </div>
 
             {/* Preview Panel - Desktop only or mobile overlay */}
             {showPreview && !isMobile && (
-              <div className="w-[280px] shrink-0 animate-in slide-in-from-right duration-200">
-                <PreviewPanel
-                  file={focusedFile}
-                  onClose={() => setShowPreview(false)}
-                  onDownload={downloadFile}
-                  onDelete={handleDeleteFile}
-                  onMove={setMoveFileTarget}
-                  onPreview={setPreviewFile}
-                />
-              </div>
-            )}
-
-            {/* Mobile Preview Overlay */}
-            {isMobile && showPreview && focusedFile && (
-              <>
-                <div
-                  className="fixed inset-0 bg-black/50 z-40 animate-in fade-in duration-200"
-                  onClick={() => setShowPreview(false)}
-                />
-                <div className="fixed inset-x-0 bottom-0 z-50 max-h-[70vh] animate-in slide-in-from-bottom duration-200">
+              <div className="w-[300px] shrink-0 ml-4 animate-in slide-in-from-right duration-500 ease-out">
+                <div className="glass-card h-full rounded-2xl border border-border/40 overflow-hidden shadow-sm">
                   <PreviewPanel
                     file={focusedFile}
                     onClose={() => setShowPreview(false)}
@@ -415,6 +422,29 @@ export function FileManager() {
                     onMove={setMoveFileTarget}
                     onPreview={setPreviewFile}
                   />
+                </div>
+              </div>
+            )}
+
+            {/* Mobile Preview Overlay */}
+            {isMobile && showPreview && focusedFile && (
+              <>
+                <div
+                  className="fixed inset-0 bg-black/60 backdrop-blur-md z-40 animate-in fade-in duration-300"
+                  onClick={() => setShowPreview(false)}
+                />
+                <div className="fixed inset-x-0 bottom-0 z-50 max-h-[85vh] animate-in slide-in-from-bottom duration-500 ease-out overflow-hidden">
+                  <div className="bg-background rounded-t-3xl border-t border-border/50 h-full">
+                    <div className="w-12 h-1.5 bg-muted rounded-full mx-auto my-3" />
+                    <PreviewPanel
+                      file={focusedFile}
+                      onClose={() => setShowPreview(false)}
+                      onDownload={downloadFile}
+                      onDelete={handleDeleteFile}
+                      onMove={setMoveFileTarget}
+                      onPreview={setPreviewFile}
+                    />
+                  </div>
                 </div>
               </>
             )}
@@ -441,6 +471,12 @@ export function FileManager() {
         currentPath={currentPath}
         onClose={() => setMoveFileTarget(null)}
         onMove={handleMoveFile}
+      />
+      
+      <SettingsDialog
+        isOpen={showSettings}
+        onClose={() => setShowSettings(false)}
+        onConfigChanged={refresh}
       />
     </div>
   );

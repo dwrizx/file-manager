@@ -1,11 +1,24 @@
 import { serve } from "bun";
 import index from "./index.html";
 import { listFiles, saveFile, getFile, deleteFile, createFolder, moveFile } from "./utils/files";
+import { loadConfig, saveConfig } from "./lib/config";
 
 const server = serve({
   port: 1945,
   routes: {
     "/*": index,
+
+    "/api/config": {
+      async GET() {
+        const config = await loadConfig();
+        return Response.json(config);
+      },
+      async POST(req) {
+        const body = await req.json();
+        const config = await saveConfig(body);
+        return Response.json(config);
+      }
+    },
 
     "/api/files": {
       async GET(req) {
@@ -22,9 +35,10 @@ const server = serve({
         const uploadedFiles: Array<{ name: string; size: number; type: string; path: string }> = [];
 
         for (const [_, value] of formData.entries()) {
-          if (value instanceof File) {
-            const buffer = await value.arrayBuffer();
-            const fileInfo = await saveFile(value.name, new Uint8Array(buffer), path);
+          if (value && typeof value !== "string") {
+            const file = value as File;
+            const buffer = await file.arrayBuffer();
+            const fileInfo = await saveFile(file.name, new Uint8Array(buffer), path);
             uploadedFiles.push(fileInfo);
           }
         }

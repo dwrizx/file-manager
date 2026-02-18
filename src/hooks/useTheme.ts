@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getSetting, setSetting } from '@/lib/db';
 
-type Theme = 'light' | 'dark' | 'system';
+export type Theme = 'light' | 'dark' | 'system';
 
 export function useTheme() {
   const [theme, setThemeState] = useState<Theme>('system');

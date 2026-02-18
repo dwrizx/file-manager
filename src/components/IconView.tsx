@@ -279,65 +279,65 @@ function IconItem({
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       className={cn(
-        "relative flex flex-col items-center p-3 rounded-xl cursor-pointer transition-all duration-150 group",
-        isSelected && "bg-primary/15 ring-1 ring-primary/30",
-        isFocused && !isSelected && "bg-muted/80 ring-1 ring-border",
-        !isSelected && !isFocused && "hover:bg-muted/50",
-        isDragOver && "bg-primary/20 ring-2 ring-primary scale-105 shadow-lg",
-        isDragging && "opacity-50 scale-95"
+        "relative flex flex-col items-center p-3 rounded-2xl cursor-pointer transition-all duration-200 group",
+        isSelected && "bg-primary/10 ring-2 ring-primary/40 shadow-sm",
+        isFocused && !isSelected && "bg-muted/40 ring-1 ring-border/50 shadow-xs",
+        !isSelected && !isFocused && "hover:bg-muted/30 hover:shadow-xs",
+        isDragOver && "bg-primary/20 ring-2 ring-primary scale-105 shadow-md",
+        isDragging && "opacity-40 scale-95"
       )}
     >
       {/* Drag handle indicator on hover */}
       <div className={cn(
-        "absolute top-1 right-1 opacity-0 group-hover:opacity-50 transition-opacity",
+        "absolute top-2 right-2 opacity-0 group-hover:opacity-40 transition-opacity",
         isDragging && "opacity-0"
       )}>
-        <GripVertical className="size-3 text-muted-foreground" />
+        <GripVertical className="size-3.5 text-muted-foreground" />
       </div>
 
       {/* Selection indicator */}
       {isSelected && (
-        <div className="absolute top-1.5 left-1.5 size-4 rounded-full bg-primary flex items-center justify-center">
-          <Check className="size-2.5 text-primary-foreground" />
+        <div className="absolute top-2 left-2 size-5 rounded-full bg-primary flex items-center justify-center shadow-sm animate-in zoom-in duration-200">
+          <Check className="size-3 text-primary-foreground" />
         </div>
       )}
 
       {/* Icon */}
       <div className={cn(
-        "size-14 rounded-xl flex items-center justify-center mb-2 transition-all",
-        file.isDirectory ? "bg-amber-500/10" : "bg-muted/50",
+        "size-16 rounded-2xl flex items-center justify-center mb-3 transition-all duration-300",
+        file.isDirectory ? "bg-amber-500/10 shadow-[0_0_20px_rgba(245,158,11,0.1)]" : "bg-muted/40",
         isDragOver && "bg-primary/30 animate-pulse",
-        !isDragging && "group-hover:scale-105"
+        !isDragging && "group-hover:scale-110 group-hover:-translate-y-1"
       )}>
         {file.isDirectory ? (
           isDragOver ? (
-            <FolderOpen className="size-9 text-primary animate-bounce" />
+            <FolderOpen className="size-10 text-primary animate-bounce" />
           ) : (
-            <Folder className="size-9 text-amber-500" />
+            <Folder className="size-10 text-amber-500 fill-amber-500/20" />
           )
         ) : (
-          <FileIcon type={file.type} className="size-8" />
+          <FileIcon type={file.type} className="size-9 drop-shadow-sm" />
         )}
       </div>
 
       {/* Name */}
       <p className={cn(
-        "text-xs text-center line-clamp-2 w-full break-all leading-tight",
-        (isSelected || isFocused) && "font-medium"
+        "text-xs text-center line-clamp-2 w-full break-all leading-tight font-medium transition-colors",
+        isSelected ? "text-primary" : "text-foreground/90 group-hover:text-foreground"
       )}>
         {file.name}
       </p>
 
       {/* Size for files */}
       {!file.isDirectory && (
-        <p className="text-[10px] text-muted-foreground mt-0.5">
+        <p className="text-[10px] text-muted-foreground/70 mt-1 font-normal">
           {formatBytes(file.size)}
         </p>
       )}
 
       {/* Drop target indicator */}
       {isDragOver && (
-        <div className="absolute inset-0 border-2 border-dashed border-primary rounded-xl pointer-events-none animate-pulse" />
+        <div className="absolute inset-0 border-2 border-dashed border-primary rounded-2xl pointer-events-none animate-pulse" />
       )}
     </div>
   );

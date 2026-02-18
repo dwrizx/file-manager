@@ -18,6 +18,7 @@ import {
   ArrowUp,
   ArrowDown,
   Check,
+  Settings,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -46,6 +47,7 @@ interface ToolbarProps {
   sortField: SortField;
   sortOrder: SortOrder;
   onToggleSort: (field: SortField) => void;
+  onSettings: () => void;
 }
 
 const SORT_OPTIONS: { field: SortField; label: string }[] = [
@@ -76,6 +78,7 @@ export function Toolbar({
   sortField,
   sortOrder,
   onToggleSort,
+  onSettings,
 }: ToolbarProps) {
   const [showSortMenu, setShowSortMenu] = useState(false);
   const sortMenuRef = useRef<HTMLDivElement>(null);
@@ -94,50 +97,52 @@ export function Toolbar({
   const currentSortLabel = SORT_OPTIONS.find((o) => o.field === sortField)?.label || "Name";
 
   return (
-    <div className="flex items-center gap-2 px-3 py-2 bg-muted/30 border-b">
+    <div className="flex items-center gap-2 px-3 py-2 bg-transparent">
       {/* Sidebar toggle */}
       <Button
         variant="ghost"
-        size="icon-sm"
+        size="icon"
         onClick={onToggleSidebar}
         title={showSidebar ? "Hide sidebar" : "Show sidebar"}
-        className="shrink-0"
+        className="shrink-0 hover:bg-muted/50 rounded-xl"
       >
         {showSidebar ? (
-          <SidebarClose className="size-4" />
+          <SidebarClose className="size-4.5" />
         ) : (
-          <SidebarOpen className="size-4" />
+          <SidebarOpen className="size-4.5" />
         )}
       </Button>
 
-      <div className="w-px h-5 bg-border" />
+      <div className="w-px h-5 bg-border/40 mx-1" />
 
       {/* Navigation */}
-      <div className="flex items-center gap-0.5">
+      <div className="flex items-center gap-1">
         <Button
           variant="ghost"
-          size="icon-sm"
+          size="icon"
           onClick={onBack}
           disabled={!canGoBack}
           title="Go back"
+          className="hover:bg-muted/50 rounded-xl"
         >
-          <ChevronLeft className="size-4" />
+          <ChevronLeft className="size-4.5" />
         </Button>
         <Button
           variant="ghost"
-          size="icon-sm"
+          size="icon"
           onClick={onForward}
           disabled={!canGoForward}
           title="Go forward"
+          className="hover:bg-muted/50 rounded-xl"
         >
-          <ChevronRight className="size-4" />
+          <ChevronRight className="size-4.5" />
         </Button>
       </div>
 
-      <div className="w-px h-5 bg-border" />
+      <div className="w-px h-5 bg-border/40 mx-1" />
 
       {/* View mode toggle */}
-      <div className="flex items-center bg-muted/50 rounded-lg p-0.5">
+      <div className="flex items-center bg-muted/30 rounded-xl p-1 shadow-inner border border-border/20">
         <ViewModeButton
           active={viewMode === "icon"}
           onClick={() => onViewModeChange("icon")}
@@ -161,7 +166,7 @@ export function Toolbar({
         </ViewModeButton>
       </div>
 
-      <div className="w-px h-5 bg-border" />
+      <div className="w-px h-5 bg-border/40 mx-1" />
 
       {/* Sort dropdown */}
       <div className="relative" ref={sortMenuRef}>
@@ -169,11 +174,11 @@ export function Toolbar({
           variant="ghost"
           size="sm"
           onClick={() => setShowSortMenu(!showSortMenu)}
-          className="gap-1.5 text-muted-foreground hover:text-foreground"
+          className="gap-2 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-xl px-3"
           title="Sort files"
         >
           <ArrowUpDown className="size-3.5" />
-          <span className="hidden sm:inline">{currentSortLabel}</span>
+          <span className="hidden sm:inline font-medium text-xs tracking-tight">{currentSortLabel}</span>
           {sortOrder === "asc" ? (
             <ArrowUp className="size-3" />
           ) : (
@@ -183,7 +188,10 @@ export function Toolbar({
 
         {/* Sort dropdown menu */}
         {showSortMenu && (
-          <div className="absolute top-full left-0 mt-1 w-40 bg-popover border rounded-lg shadow-lg py-1 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+          <div className="absolute top-full left-0 mt-2 w-48 glass rounded-2xl shadow-xl py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-300">
+            <div className="px-3 py-1 mb-1 border-b border-border/30">
+              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Sort by</span>
+            </div>
             {SORT_OPTIONS.map((option) => (
               <button
                 key={option.field}
@@ -194,8 +202,8 @@ export function Toolbar({
                   }
                 }}
                 className={cn(
-                  "w-full flex items-center justify-between px-3 py-1.5 text-sm hover:bg-muted transition-colors",
-                  option.field === sortField && "text-primary font-medium"
+                  "w-full flex items-center justify-between px-3 py-2 text-sm hover:bg-primary/5 transition-colors",
+                  option.field === sortField && "text-primary font-semibold"
                 )}
               >
                 <span>{option.label}</span>
@@ -215,39 +223,43 @@ export function Toolbar({
         )}
       </div>
 
-      <div className="w-px h-5 bg-border" />
+      <div className="w-px h-5 bg-border/40 mx-1" />
 
       {/* Actions */}
-      <Button
-        variant="ghost"
-        size="icon-sm"
-        onClick={onNewFolder}
-        title="New folder"
-      >
-        <FolderPlus className="size-4" />
-      </Button>
+      <div className="flex items-center gap-1">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onNewFolder}
+          title="New folder"
+          className="hover:bg-muted/50 rounded-xl"
+        >
+          <FolderPlus className="size-4.5" />
+        </Button>
 
-      <Button
-        variant="ghost"
-        size="icon-sm"
-        onClick={onRefresh}
-        disabled={loading}
-        title="Refresh"
-      >
-        <RefreshCw className={cn("size-4", loading && "animate-spin")} />
-      </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onRefresh}
+          disabled={loading}
+          title="Refresh"
+          className="hover:bg-muted/50 rounded-xl"
+        >
+          <RefreshCw className={cn("size-4.5", loading && "animate-spin")} />
+        </Button>
+      </div>
 
       {selectedCount > 0 && (
         <>
-          <div className="w-px h-5 bg-border" />
+          <div className="w-px h-5 bg-border/40 mx-1" />
           <Button
             variant="ghost"
             size="sm"
             onClick={onDeleteSelected}
-            className="gap-1.5 text-destructive hover:text-destructive hover:bg-destructive/10"
+            className="gap-2 text-destructive hover:text-destructive hover:bg-destructive/10 rounded-xl font-medium"
           >
-            <Trash2 className="size-4" />
-            Delete ({selectedCount})
+            <Trash2 className="size-4.5" />
+            <span className="hidden sm:inline">Delete ({selectedCount})</span>
           </Button>
         </>
       )}
@@ -256,41 +268,53 @@ export function Toolbar({
       <div className="flex-1" />
 
       {/* Search */}
-      <div className="relative max-w-[200px]">
-        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
+      <div className="relative group hidden sm:block">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground/60 group-focus-within:text-primary transition-colors" />
         <input
           type="text"
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
-          placeholder="Search..."
-          className="w-full h-8 pl-8 pr-8 text-sm bg-muted/50 border-0 rounded-lg placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/30"
+          placeholder="Search items..."
+          className="w-48 h-9 pl-10 pr-8 text-xs font-medium bg-muted/40 border border-transparent rounded-xl placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-background/80 focus:border-border/50 focus:w-64 transition-all duration-300"
         />
         {searchQuery && (
           <button
             onClick={() => onSearchChange("")}
-            className="absolute right-2 top-1/2 -translate-y-1/2 size-4 rounded-full bg-muted-foreground/20 hover:bg-muted-foreground/30 flex items-center justify-center transition-colors"
+            className="absolute right-2 top-1/2 -translate-y-1/2 size-5 rounded-lg bg-muted-foreground/10 hover:bg-muted-foreground/20 flex items-center justify-center transition-colors"
           >
-            <X className="size-2.5" />
+            <X className="size-3" />
           </button>
         )}
       </div>
 
-      <div className="w-px h-5 bg-border" />
+      <div className="w-px h-5 bg-border/40 mx-1 hidden sm:block" />
 
-      {/* Preview toggle */}
-      <Button
-        variant="ghost"
-        size="icon-sm"
-        onClick={onTogglePreview}
-        title={showPreview ? "Hide preview" : "Show preview"}
-        className="shrink-0"
-      >
-        {showPreview ? (
-          <PanelRightClose className="size-4" />
-        ) : (
-          <PanelRightOpen className="size-4" />
-        )}
-      </Button>
+      {/* Settings & Preview */}
+      <div className="flex items-center gap-1">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onSettings}
+          title="Settings"
+          className="shrink-0 hover:bg-muted/50 rounded-xl"
+        >
+          <Settings className="size-4.5" />
+        </Button>
+        
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onTogglePreview}
+          title={showPreview ? "Hide preview" : "Show preview"}
+          className="shrink-0 hover:bg-muted/50 rounded-xl"
+        >
+          {showPreview ? (
+            <PanelRightClose className="size-4.5" />
+          ) : (
+            <PanelRightOpen className="size-4.5" />
+          )}
+        </Button>
+      </div>
     </div>
   );
 }
@@ -311,13 +335,14 @@ function ViewModeButton({
       onClick={onClick}
       title={title}
       className={cn(
-        "size-7 rounded-md flex items-center justify-center transition-all",
+        "size-7 rounded-lg flex items-center justify-center transition-all duration-300",
         active
-          ? "bg-background shadow-sm text-foreground"
-          : "text-muted-foreground hover:text-foreground"
+          ? "bg-background shadow-sm text-primary scale-105"
+          : "text-muted-foreground/70 hover:text-foreground hover:bg-background/30"
       )}
     >
       {children}
     </button>
   );
 }
+
