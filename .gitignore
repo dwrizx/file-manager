@@ -4,6 +4,7 @@ node_modules
 # output
 out
 dist
+build
 *.tgz
 
 # code coverage
@@ -12,11 +13,13 @@ coverage
 
 # logs
 logs
+*.log
 _.log
 report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 
 # dotenv environment variable files
 .env
+.env.*
 .env.development.local
 .env.test.local
 .env.production.local
@@ -26,9 +29,18 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 .eslintcache
 .cache
 *.tsbuildinfo
+.turbo
 
-# IntelliJ based IDEs
+# IDEs / editors
 .idea
+.vscode
+*.swp
+*.swo
+*~
 
-# Finder (MacOS) folder config
+# OS
 .DS_Store
+Thumbs.db
+
+# Optional: uncomment if you don't want to commit lockfile
+# bun.lockb
