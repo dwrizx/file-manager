@@ -22,8 +22,7 @@
     "noImplicitOverride": true,
 
     "paths": {
-      "@/*": ["./src/*"],
-      "dexie": ["./src/types/dexie-shim.d.ts"]
+      "@/*": ["./src/*"]
     },
 
     // Some stricter flags (disabled by default)
