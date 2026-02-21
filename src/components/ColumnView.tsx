@@ -33,7 +33,10 @@ function formatBytes(bytes: number): string {
   if (bytes <= 0) return "-";
   const k = 1024;
   const sizes = ["B", "KB", "MB", "GB"];
-  const i = Math.min(Math.floor(Math.log(bytes) / Math.log(k)), sizes.length - 1);
+  const i = Math.min(
+    Math.floor(Math.log(bytes) / Math.log(k)),
+    sizes.length - 1,
+  );
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
 }
 
@@ -69,11 +72,15 @@ export function ColumnView({
       newColumns.push({
         path,
         files: [],
-        selectedPath: pathParts[i + 1] ? pathParts.slice(0, i + 2).join("/") : null,
+        selectedPath: pathParts[i + 1]
+          ? pathParts.slice(0, i + 2).join("/")
+          : null,
       });
     }
 
-    setSelectedPaths(pathParts.map((_, i) => pathParts.slice(0, i + 1).join("/")));
+    setSelectedPaths(
+      pathParts.map((_, i) => pathParts.slice(0, i + 1).join("/")),
+    );
     setColumns(newColumns);
   }, [currentPath]);
 
@@ -81,8 +88,12 @@ export function ColumnView({
   useEffect(() => {
     if (columns.length > 0) {
       const lastColumn = columns[columns.length - 1];
-      if (lastColumn && (lastColumn.path === currentPath || (lastColumn.path === "" && currentPath === ""))) {
-        setColumns(prev => {
+      if (
+        lastColumn &&
+        (lastColumn.path === currentPath ||
+          (lastColumn.path === "" && currentPath === ""))
+      ) {
+        setColumns((prev) => {
           const updated = [...prev];
           const last = updated[updated.length - 1];
           if (last) {
@@ -104,7 +115,7 @@ export function ColumnView({
     }
   }, [columns.length]);
 
-  const handleFileClick = (file: FileInfo, columnIndex: number) => {
+  const handleFileClick = (file: FileInfo) => {
     if (file.isDirectory) {
       // Navigate into folder - this will update columns
       onNavigate(file.path);
@@ -121,23 +132,25 @@ export function ColumnView({
   };
 
   // If we only have one column, show the current files
-  const displayColumns = columns.length > 0 ? columns : [{
-    path: currentPath,
-    files,
-    selectedPath: null,
-  }];
+  const displayColumns =
+    columns.length > 0
+      ? columns
+      : [
+          {
+            path: currentPath,
+            files,
+            selectedPath: null,
+          },
+        ];
 
   return (
-    <div
-      ref={containerRef}
-      className="flex h-full overflow-x-auto"
-    >
+    <div ref={containerRef} className="flex h-full overflow-x-auto">
       {displayColumns.map((column, index) => (
         <div
           key={column.path || "root"}
           className={cn(
             "flex-shrink-0 w-[220px] h-full border-r last:border-r-0 overflow-y-auto bg-card/50",
-            index === displayColumns.length - 1 && "bg-card"
+            index === displayColumns.length - 1 && "bg-card",
           )}
         >
           {column.files.length === 0 && index === displayColumns.length - 1 ? (
@@ -154,7 +167,7 @@ export function ColumnView({
                   isSelected={selectedFiles.has(file.path)}
                   isFocused={focusedFile?.path === file.path}
                   isInPath={selectedPaths.includes(file.path)}
-                  onClick={() => handleFileClick(file, index)}
+                  onClick={() => handleFileClick(file)}
                   onDoubleClick={() => handleFileDoubleClick(file)}
                   onToggleSelect={onToggleSelect}
                 />
@@ -201,7 +214,7 @@ function ColumnItem({
         isSelected && "bg-primary/15",
         isInPath && !isSelected && "bg-primary/10",
         isFocused && !isSelected && !isInPath && "bg-muted",
-        !isSelected && !isFocused && !isInPath && "hover:bg-muted/50"
+        !isSelected && !isFocused && !isInPath && "hover:bg-muted/50",
       )}
     >
       {/* Checkbox for selection */}
@@ -212,7 +225,7 @@ function ColumnItem({
         }}
         className={cn(
           "shrink-0 size-4 rounded border flex items-center justify-center transition-all opacity-0 group-hover:opacity-100",
-          isSelected && "bg-primary border-primary opacity-100"
+          isSelected && "bg-primary border-primary opacity-100",
         )}
       >
         {isSelected && <Check className="size-2.5 text-primary-foreground" />}
@@ -232,10 +245,12 @@ function ColumnItem({
       </div>
 
       {/* Name */}
-      <span className={cn(
-        "flex-1 text-sm truncate",
-        (isSelected || isInPath) && "font-medium"
-      )}>
+      <span
+        className={cn(
+          "flex-1 text-sm truncate",
+          (isSelected || isInPath) && "font-medium",
+        )}
+      >
         {file.name}
       </span>
 

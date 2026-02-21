@@ -21,9 +21,9 @@
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
 
-    "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "dexie": ["./src/types/dexie-shim.d.ts"]
     },
 
     // Some stricter flags (disabled by default)
@@ -32,5 +32,6 @@
     "noPropertyAccessFromIndexSignature": false
   },
 
-  "exclude": ["dist", "node_modules"]
+  "include": ["src", "bun-env.d.ts"],
+  "exclude": ["dist", "node_modules", "build.ts"]
 }

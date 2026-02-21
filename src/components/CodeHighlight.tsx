@@ -41,7 +41,11 @@ const LANGUAGE_MAP: Record<string, string> = {
   gitignore: "git",
 };
 
-export function CodeHighlight({ code, language, isDark = false }: CodeHighlightProps) {
+export function CodeHighlight({
+  code,
+  language,
+  isDark = false,
+}: CodeHighlightProps) {
   const lang = LANGUAGE_MAP[language.toLowerCase()] || "plain";
   const theme = isDark ? themes.nightOwl : themes.github;
 

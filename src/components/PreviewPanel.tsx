@@ -39,7 +39,10 @@ function formatBytes(bytes: number): string {
   if (bytes <= 0) return "-";
   const k = 1024;
   const sizes = ["B", "KB", "MB", "GB", "TB"];
-  const i = Math.min(Math.floor(Math.log(bytes) / Math.log(k)), sizes.length - 1);
+  const i = Math.min(
+    Math.floor(Math.log(bytes) / Math.log(k)),
+    sizes.length - 1,
+  );
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
 }
 
@@ -130,7 +133,16 @@ export function PreviewPanel({
     }
 
     const ext = getFileExtension(file.name);
-    const isImage = ["jpg", "jpeg", "png", "gif", "webp", "svg", "bmp", "ico"].includes(ext);
+    const isImage = [
+      "jpg",
+      "jpeg",
+      "png",
+      "gif",
+      "webp",
+      "svg",
+      "bmp",
+      "ico",
+    ].includes(ext);
 
     if (isImage) {
       setImageLoading(true);
@@ -155,7 +167,16 @@ export function PreviewPanel({
   }
 
   const ext = getFileExtension(file.name);
-  const isImage = ["jpg", "jpeg", "png", "gif", "webp", "svg", "bmp", "ico"].includes(ext);
+  const isImage = [
+    "jpg",
+    "jpeg",
+    "png",
+    "gif",
+    "webp",
+    "svg",
+    "bmp",
+    "ico",
+  ].includes(ext);
   const isVideo = ["mp4", "webm", "ogg", "mov"].includes(ext);
   const isAudio = ["mp3", "wav", "ogg", "m4a", "flac", "aac"].includes(ext);
 
@@ -198,12 +219,12 @@ export function PreviewPanel({
                 alt={file.name}
                 className={cn(
                   "w-full h-full object-cover transition-opacity duration-300",
-                  imageLoading ? "opacity-0" : "opacity-100"
+                  imageLoading ? "opacity-0" : "opacity-100",
                 )}
                 onLoad={() => setImageLoading(false)}
               />
             </div>
-          ) : (isVideo || isAudio) ? (
+          ) : isVideo || isAudio ? (
             <div
               onClick={() => onPreview(file)}
               className="w-full aspect-square rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex flex-col items-center justify-center gap-3 cursor-pointer hover:from-primary/30 hover:to-primary/10 transition-colors shadow-lg"
@@ -217,7 +238,10 @@ export function PreviewPanel({
             </div>
           ) : (
             <div className="size-24 rounded-2xl bg-muted/50 flex items-center justify-center shadow-lg">
-              <FileIcon type={file.isDirectory ? "folder" : file.type} className="size-12" />
+              <FileIcon
+                type={file.isDirectory ? "folder" : file.type}
+                className="size-12"
+              />
             </div>
           )}
 
@@ -258,25 +282,27 @@ export function PreviewPanel({
 
         <Section title="Tags" defaultOpen={false}>
           <div className="flex flex-wrap gap-1.5 py-1">
-            {["Red", "Orange", "Yellow", "Green", "Blue", "Purple"].map((tag) => (
-              <button
-                key={tag}
-                className="flex items-center gap-1.5 px-2 py-1 rounded-md text-xs hover:bg-muted transition-colors"
-              >
-                <div
-                  className={cn(
-                    "size-2.5 rounded-full",
-                    tag === "Red" && "bg-red-500",
-                    tag === "Orange" && "bg-orange-500",
-                    tag === "Yellow" && "bg-yellow-500",
-                    tag === "Green" && "bg-green-500",
-                    tag === "Blue" && "bg-blue-500",
-                    tag === "Purple" && "bg-purple-500"
-                  )}
-                />
-                {tag}
-              </button>
-            ))}
+            {["Red", "Orange", "Yellow", "Green", "Blue", "Purple"].map(
+              (tag) => (
+                <button
+                  key={tag}
+                  className="flex items-center gap-1.5 px-2 py-1 rounded-md text-xs hover:bg-muted transition-colors"
+                >
+                  <div
+                    className={cn(
+                      "size-2.5 rounded-full",
+                      tag === "Red" && "bg-red-500",
+                      tag === "Orange" && "bg-orange-500",
+                      tag === "Yellow" && "bg-yellow-500",
+                      tag === "Green" && "bg-green-500",
+                      tag === "Blue" && "bg-blue-500",
+                      tag === "Purple" && "bg-purple-500",
+                    )}
+                  />
+                  {tag}
+                </button>
+              ),
+            )}
           </div>
         </Section>
       </div>

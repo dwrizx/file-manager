@@ -1,4 +1,4 @@
-import Dexie, { type EntityTable } from 'dexie';
+import Dexie, { type EntityTable } from "dexie";
 
 interface Settings {
   key: string;
@@ -12,14 +12,14 @@ interface RecentFile {
   accessedAt: Date;
 }
 
-const db = new Dexie('FileMagnetDB') as Dexie & {
-  settings: EntityTable<Settings, 'key'>;
-  recentFiles: EntityTable<RecentFile, 'id'>;
+const db = new Dexie("FileMagnetDB") as Dexie & {
+  settings: EntityTable<Settings, "key">;
+  recentFiles: EntityTable<RecentFile, "id">;
 };
 
 db.version(1).stores({
-  settings: 'key',
-  recentFiles: '++id, path, accessedAt',
+  settings: "key",
+  recentFiles: "++id, path, accessedAt",
 });
 
 export async function getSetting(key: string): Promise<string | null> {
@@ -37,7 +37,7 @@ export async function addRecentFile(path: string, name: string): Promise<void> {
 
 export async function getRecentFiles(limit = 10): Promise<RecentFile[]> {
   return await db.recentFiles
-    .orderBy('accessedAt')
+    .orderBy("accessedAt")
     .reverse()
     .limit(limit)
     .toArray();

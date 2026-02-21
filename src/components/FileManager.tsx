@@ -116,7 +116,7 @@ export function FileManager() {
       e.preventDefault();
       e.stopPropagation();
       windowDragCounter.current++;
-      
+
       // Only show overlay if dragging actual files from outside the window
       const items = e.dataTransfer?.items;
       if (items && items.length > 0 && items[0]?.kind === "file") {
@@ -143,7 +143,7 @@ export function FileManager() {
       e.stopPropagation();
       setIsWindowDragging(false);
       windowDragCounter.current = 0;
-      
+
       const files = Array.from(e.dataTransfer?.files || []);
       if (files.length > 0) {
         uploadFiles(files);
@@ -192,7 +192,10 @@ export function FileManager() {
   };
 
   const handleDeleteSelected = async () => {
-    if (selectedFiles.size > 0 && confirm(`Delete ${selectedFiles.size} items?`)) {
+    if (
+      selectedFiles.size > 0 &&
+      confirm(`Delete ${selectedFiles.size} items?`)
+    ) {
       await deleteSelected();
       setFocusedFile(null);
     }
@@ -216,7 +219,7 @@ export function FileManager() {
       {/* Decorative background elements */}
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/5 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-primary/5 rounded-full blur-[120px] pointer-events-none" />
-      
+
       {/* Global Drop Overlay */}
       {isWindowDragging && (
         <div className="fixed inset-0 z-[100] bg-primary/10 backdrop-blur-md flex items-center justify-center p-8 animate-in fade-in duration-300">
@@ -225,8 +228,12 @@ export function FileManager() {
               <ArrowUpFromLine className="size-12 text-primary" />
             </div>
             <div className="text-center space-y-2">
-              <h2 className="text-3xl font-bold tracking-tight text-gradient">Drop to Upload</h2>
-              <p className="text-muted-foreground font-medium">Your files will be uploaded to the current folder</p>
+              <h2 className="text-3xl font-bold tracking-tight text-gradient">
+                Drop to Upload
+              </h2>
+              <p className="text-muted-foreground font-medium">
+                Your files will be uploaded to the current folder
+              </p>
             </div>
           </div>
         </div>
@@ -243,7 +250,9 @@ export function FileManager() {
           >
             <Menu className="size-5" />
           </Button>
-          <h1 className="font-bold text-lg tracking-tight text-gradient">File Magnet</h1>
+          <h1 className="font-bold text-lg tracking-tight text-gradient">
+            File Magnet
+          </h1>
           <Button
             variant="ghost"
             size="icon"
@@ -267,12 +276,14 @@ export function FileManager() {
 
         {/* Sidebar */}
         {(showSidebar || !isMobile) && showSidebar && (
-          <div className={cn(
-            "shrink-0 transition-all duration-300 ease-in-out",
-            isMobile
-              ? "fixed inset-y-0 left-0 z-50 w-[280px] shadow-2xl glass border-r-0"
-              : "w-[240px] border-r bg-card/30 backdrop-blur-xl"
-          )}>
+          <div
+            className={cn(
+              "shrink-0 transition-all duration-300 ease-in-out",
+              isMobile
+                ? "fixed inset-y-0 left-0 z-50 w-[280px] shadow-2xl glass border-r-0"
+                : "w-[240px] border-r bg-card/30 backdrop-blur-xl",
+            )}
+          >
             {isMobile && (
               <div className="absolute top-4 right-4 z-10">
                 <Button
@@ -317,12 +328,13 @@ export function FileManager() {
                 selectedCount={selectedFiles.size}
                 showSidebar={showSidebar}
                 onToggleSidebar={() => setShowSidebar(!showSidebar)}
-                              showPreview={showPreview}
-                              onTogglePreview={() => setShowPreview(!showPreview)}
-                              showHidden={showHidden}
-                              onToggleHidden={toggleShowHidden}
-                              searchQuery={searchQuery}
-                              onSearchChange={setSearchQuery}                loading={loading}
+                showPreview={showPreview}
+                onTogglePreview={() => setShowPreview(!showPreview)}
+                showHidden={showHidden}
+                onToggleHidden={toggleShowHidden}
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+                loading={loading}
                 sortField={sortField}
                 sortOrder={sortOrder}
                 onToggleSort={toggleSort}
@@ -332,10 +344,12 @@ export function FileManager() {
           )}
 
           {/* Header with breadcrumb and theme toggle */}
-          <div className={cn(
-            "flex items-center justify-between mx-4 mt-4 mb-2",
-            isMobile ? "px-0" : ""
-          )}>
+          <div
+            className={cn(
+              "flex items-center justify-between mx-4 mt-4 mb-2",
+              isMobile ? "px-0" : "",
+            )}
+          >
             <div className="glass-card px-4 py-2 rounded-xl flex-1 mr-4 overflow-hidden border border-border/40">
               <Breadcrumb path={currentPath} onNavigate={navigateToFolder} />
             </div>
@@ -382,10 +396,12 @@ export function FileManager() {
           <div className="flex-1 flex overflow-hidden px-4 pb-4">
             <div className="glass-card flex-1 flex flex-col min-w-0 overflow-hidden rounded-2xl border border-border/40 shadow-sm relative">
               {/* Drop zone */}
-              <div className={cn(
-                "border-b border-border/40",
-                isMobile ? "px-3 py-2" : "px-4 py-3"
-              )}>
+              <div
+                className={cn(
+                  "border-b border-border/40",
+                  isMobile ? "px-3 py-2" : "px-4 py-3",
+                )}
+              >
                 <DropZone
                   onUpload={uploadFiles}
                   disabled={loading}
@@ -421,7 +437,9 @@ export function FileManager() {
                 {loading ? (
                   <div className="flex flex-col items-center justify-center h-full gap-4">
                     <div className="size-12 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
-                    <p className="text-sm text-muted-foreground animate-pulse font-medium">Loading your files...</p>
+                    <p className="text-sm text-muted-foreground animate-pulse font-medium">
+                      Loading your files...
+                    </p>
                   </div>
                 ) : (
                   <div className="p-1">
@@ -471,15 +489,28 @@ export function FileManager() {
               </div>
 
               {/* Status bar */}
-              <div className={cn(
-                "py-2.5 border-t border-border/40 bg-muted/10 text-[11px] font-medium text-muted-foreground flex items-center justify-between",
-                isMobile ? "px-4" : "px-6"
-              )}>
+              <div
+                className={cn(
+                  "py-2.5 border-t border-border/40 bg-muted/10 text-[11px] font-medium text-muted-foreground flex items-center justify-between",
+                  isMobile ? "px-4" : "px-6",
+                )}
+              >
                 <div className="flex items-center gap-4">
-                  <span>{filteredFiles.length} {filteredFiles.length === 1 ? "item" : "items"}</span>
-                  {selectedFiles.size > 0 && <span className="text-primary">{selectedFiles.size} selected</span>}
+                  <span>
+                    {filteredFiles.length}{" "}
+                    {filteredFiles.length === 1 ? "item" : "items"}
+                  </span>
+                  {selectedFiles.size > 0 && (
+                    <span className="text-primary">
+                      {selectedFiles.size} selected
+                    </span>
+                  )}
                 </div>
-                {searchQuery && <span className="hidden sm:inline opacity-70">Searching: "{searchQuery}"</span>}
+                {searchQuery && (
+                  <span className="hidden sm:inline opacity-70">
+                    Searching: "{searchQuery}"
+                  </span>
+                )}
               </div>
             </div>
 
@@ -545,7 +576,7 @@ export function FileManager() {
         onClose={() => setMoveFileTarget(null)}
         onMove={handleMoveFile}
       />
-      
+
       <SettingsDialog
         isOpen={showSettings}
         onClose={() => setShowSettings(false)}

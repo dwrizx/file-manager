@@ -1,5 +1,15 @@
 import { useState } from "react";
-import { Search, X, SlidersHorizontal, Folder, FileText, Image, Video, Music, Archive } from "lucide-react";
+import {
+  Search,
+  X,
+  SlidersHorizontal,
+  Folder,
+  FileText,
+  Image,
+  Video,
+  Music,
+  Archive,
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -21,7 +31,12 @@ const FILE_TYPES = [
   { value: "archive", label: "Archives", icon: Archive },
 ];
 
-export function SearchBar({ value, onChange, filterType, onFilterChange }: SearchBarProps) {
+export function SearchBar({
+  value,
+  onChange,
+  filterType,
+  onFilterChange,
+}: SearchBarProps) {
   const [showFilters, setShowFilters] = useState(false);
 
   return (
@@ -56,7 +71,7 @@ export function SearchBar({ value, onChange, filterType, onFilterChange }: Searc
           title="Filter by type"
           className={cn(
             "h-11 w-11 rounded-xl shrink-0 transition-all",
-            (showFilters || filterType) && "shadow-md"
+            (showFilters || filterType) && "shadow-md",
           )}
         >
           <SlidersHorizontal className="size-4" />
@@ -76,7 +91,7 @@ export function SearchBar({ value, onChange, filterType, onFilterChange }: Searc
                   "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all",
                   isActive
                     ? "bg-primary text-primary-foreground shadow-md"
-                    : "bg-background hover:bg-muted border border-border hover:border-primary/30"
+                    : "bg-background hover:bg-muted border border-border hover:border-primary/30",
                 )}
               >
                 {Icon && <Icon className="size-3.5" />}

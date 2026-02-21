@@ -1,5 +1,14 @@
 import { useState, useEffect } from "react";
-import { FolderInput, X, Loader2, Folder, FolderOpen, ChevronRight, Home, ArrowRight } from "lucide-react";
+import {
+  FolderInput,
+  X,
+  Loader2,
+  Folder,
+  FolderOpen,
+  ChevronRight,
+  Home,
+  ArrowRight,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -17,7 +26,13 @@ interface MoveFileDialogProps {
   onMove: (source: string, destination: string) => Promise<void>;
 }
 
-export function MoveFileDialog({ isOpen, file, currentPath, onClose, onMove }: MoveFileDialogProps) {
+export function MoveFileDialog({
+  isOpen,
+  file,
+  currentPath,
+  onClose,
+  onMove,
+}: MoveFileDialogProps) {
   const [folders, setFolders] = useState<FileInfo[]>([]);
   const [loading, setLoading] = useState(false);
   const [moving, setMoving] = useState(false);
@@ -32,11 +47,15 @@ export function MoveFileDialog({ isOpen, file, currentPath, onClose, onMove }: M
     const fetchFolders = async () => {
       setLoading(true);
       try {
-        const res = await fetch(`/api/files?path=${encodeURIComponent(browsePath)}`);
+        const res = await fetch(
+          `/api/files?path=${encodeURIComponent(browsePath)}`,
+        );
         const data = await res.json();
-        const folderList = (data.files || []).filter((f: FileInfo) => f.isDirectory);
+        const folderList = (data.files || []).filter(
+          (f: FileInfo) => f.isDirectory,
+        );
         setFolders(folderList);
-      } catch (err) {
+      } catch {
         setFolders([]);
       }
       setLoading(false);
@@ -94,7 +113,7 @@ export function MoveFileDialog({ isOpen, file, currentPath, onClose, onMove }: M
     try {
       await onMove(file.path, newPath);
       handleClose();
-    } catch (err) {
+    } catch {
       setError("Failed to move file");
     }
     setMoving(false);
@@ -109,15 +128,11 @@ export function MoveFileDialog({ isOpen, file, currentPath, onClose, onMove }: M
     setError("");
   };
 
-  const goUp = () => {
-    const parts = browsePath.split("/").filter(Boolean);
-    parts.pop();
-    setBrowsePath(parts.join("/"));
-  };
-
   if (!isOpen || !file) return null;
 
-  const browsePathParts = browsePath ? browsePath.split("/").filter(Boolean) : [];
+  const browsePathParts = browsePath
+    ? browsePath.split("/").filter(Boolean)
+    : [];
 
   return (
     <div
@@ -141,7 +156,12 @@ export function MoveFileDialog({ isOpen, file, currentPath, onClose, onMove }: M
               </p>
             </div>
           </div>
-          <Button variant="ghost" size="icon-sm" onClick={handleClose} className="rounded-lg">
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={handleClose}
+            className="rounded-lg"
+          >
             <X className="size-4" />
           </Button>
         </div>
@@ -153,7 +173,9 @@ export function MoveFileDialog({ isOpen, file, currentPath, onClose, onMove }: M
               onClick={() => navigateToFolder("")}
               className={cn(
                 "flex items-center gap-1 px-2 py-1 rounded-md shrink-0 transition-colors",
-                browsePath === "" ? "bg-primary/10 text-primary" : "hover:bg-muted"
+                browsePath === ""
+                  ? "bg-primary/10 text-primary"
+                  : "hover:bg-muted",
               )}
             >
               <Home className="size-3.5" />
@@ -163,10 +185,16 @@ export function MoveFileDialog({ isOpen, file, currentPath, onClose, onMove }: M
               <div key={index} className="flex items-center gap-1 shrink-0">
                 <ChevronRight className="size-3.5 text-muted-foreground/50" />
                 <button
-                  onClick={() => navigateToFolder(browsePathParts.slice(0, index + 1).join("/"))}
+                  onClick={() =>
+                    navigateToFolder(
+                      browsePathParts.slice(0, index + 1).join("/"),
+                    )
+                  }
                   className={cn(
                     "px-2 py-1 rounded-md transition-colors truncate max-w-[100px]",
-                    index === browsePathParts.length - 1 ? "bg-primary/10 text-primary" : "hover:bg-muted"
+                    index === browsePathParts.length - 1
+                      ? "bg-primary/10 text-primary"
+                      : "hover:bg-muted",
                   )}
                 >
                   {part}
@@ -185,7 +213,7 @@ export function MoveFileDialog({ isOpen, file, currentPath, onClose, onMove }: M
               "w-full flex items-center gap-3 p-3 rounded-xl border-2 border-dashed transition-all mb-2",
               selectedPath === browsePath
                 ? "border-primary bg-primary/5"
-                : "border-muted-foreground/20 hover:border-primary/50 hover:bg-muted/50"
+                : "border-muted-foreground/20 hover:border-primary/50 hover:bg-muted/50",
             )}
           >
             <div className="size-10 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -215,32 +243,40 @@ export function MoveFileDialog({ isOpen, file, currentPath, onClose, onMove }: M
           ) : (
             <div className="space-y-1">
               {folders
-                .filter(f => f.path !== file.path) // Don't show the file being moved if it's a folder
+                .filter((f) => f.path !== file.path) // Don't show the file being moved if it's a folder
                 .map((folder) => (
-                <button
-                  key={folder.path}
-                  onClick={() => selectFolder(folder.path)}
-                  onDoubleClick={() => navigateToFolder(folder.path)}
-                  className={cn(
-                    "w-full flex items-center gap-3 p-3 rounded-xl transition-all group",
-                    selectedPath === folder.path
-                      ? "bg-primary/10 border border-primary/50"
-                      : "hover:bg-muted border border-transparent"
-                  )}
-                >
-                  <div className={cn(
-                    "size-10 rounded-lg flex items-center justify-center transition-colors",
-                    selectedPath === folder.path ? "bg-amber-500/20" : "bg-muted"
-                  )}>
-                    <Folder className="size-5 text-amber-500" />
-                  </div>
-                  <div className="flex-1 text-left min-w-0">
-                    <p className="font-medium text-sm truncate">{folder.name}</p>
-                    <p className="text-xs text-muted-foreground">Double-click to open</p>
-                  </div>
-                  <ChevronRight className="size-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                </button>
-              ))}
+                  <button
+                    key={folder.path}
+                    onClick={() => selectFolder(folder.path)}
+                    onDoubleClick={() => navigateToFolder(folder.path)}
+                    className={cn(
+                      "w-full flex items-center gap-3 p-3 rounded-xl transition-all group",
+                      selectedPath === folder.path
+                        ? "bg-primary/10 border border-primary/50"
+                        : "hover:bg-muted border border-transparent",
+                    )}
+                  >
+                    <div
+                      className={cn(
+                        "size-10 rounded-lg flex items-center justify-center transition-colors",
+                        selectedPath === folder.path
+                          ? "bg-amber-500/20"
+                          : "bg-muted",
+                      )}
+                    >
+                      <Folder className="size-5 text-amber-500" />
+                    </div>
+                    <div className="flex-1 text-left min-w-0">
+                      <p className="font-medium text-sm truncate">
+                        {folder.name}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Double-click to open
+                      </p>
+                    </div>
+                    <ChevronRight className="size-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </button>
+                ))}
             </div>
           )}
         </div>
@@ -258,10 +294,17 @@ export function MoveFileDialog({ isOpen, file, currentPath, onClose, onMove }: M
         {/* Footer */}
         <div className="flex items-center justify-between p-5 border-t bg-muted/20 rounded-b-2xl">
           <p className="text-xs text-muted-foreground">
-            {selectedPath ? `Move to: ${selectedPath || "Root"}` : "Select a destination"}
+            {selectedPath
+              ? `Move to: ${selectedPath || "Root"}`
+              : "Select a destination"}
           </p>
           <div className="flex gap-3">
-            <Button variant="outline" onClick={handleClose} disabled={moving} className="rounded-xl">
+            <Button
+              variant="outline"
+              onClick={handleClose}
+              disabled={moving}
+              className="rounded-xl"
+            >
               Cancel
             </Button>
             <Button

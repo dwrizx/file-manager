@@ -58,7 +58,13 @@ interface SidebarItemProps {
   color?: string;
 }
 
-function SidebarItem({ icon, label, isActive, onClick, color }: SidebarItemProps) {
+function SidebarItem({
+  icon,
+  label,
+  isActive,
+  onClick,
+  color,
+}: SidebarItemProps) {
   return (
     <button
       onClick={onClick}
@@ -66,31 +72,50 @@ function SidebarItem({ icon, label, isActive, onClick, color }: SidebarItemProps
         "flex items-center gap-3 w-full px-3.5 py-2.5 rounded-xl text-sm transition-all duration-200 group relative overflow-hidden",
         isActive
           ? "bg-primary/10 text-primary font-semibold shadow-[0_0_15px_rgba(var(--primary),0.05)]"
-          : "text-foreground/70 hover:bg-muted/60 hover:text-foreground hover:shadow-xs"
+          : "text-foreground/70 hover:bg-muted/60 hover:text-foreground hover:shadow-xs",
       )}
     >
       {isActive && (
         <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-primary rounded-r-full animate-in slide-in-from-left-full duration-300" />
       )}
-      <span className={cn("transition-transform duration-200 group-hover:scale-110", color)}>{icon}</span>
+      <span
+        className={cn(
+          "transition-transform duration-200 group-hover:scale-110",
+          color,
+        )}
+      >
+        {icon}
+      </span>
       <span className="truncate tracking-tight">{label}</span>
     </button>
   );
 }
 
-export function Sidebar({ 
-  currentPath, 
-  onNavigate, 
+export function Sidebar({
+  currentPath,
+  onNavigate,
   folders,
   locations = [],
   activeLocationIndex = 0,
-  onSwitchLocation
+  onSwitchLocation,
 }: SidebarProps) {
   const favorites = [
     { icon: <Home className="size-4.5" />, label: "Home", path: "" },
-    { icon: <FileText className="size-4.5" />, label: "Documents", path: "Documents" },
-    { icon: <Download className="size-4.5" />, label: "Downloads", path: "Downloads" },
-    { icon: <Image className="size-4.5" />, label: "Pictures", path: "Pictures" },
+    {
+      icon: <FileText className="size-4.5" />,
+      label: "Documents",
+      path: "Documents",
+    },
+    {
+      icon: <Download className="size-4.5" />,
+      label: "Downloads",
+      path: "Downloads",
+    },
+    {
+      icon: <Image className="size-4.5" />,
+      label: "Pictures",
+      path: "Pictures",
+    },
     { icon: <Music className="size-4.5" />, label: "Music", path: "Music" },
     { icon: <Video className="size-4.5" />, label: "Videos", path: "Videos" },
   ];
@@ -102,7 +127,9 @@ export function Sidebar({
         <div className="size-9 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
           <Database className="size-5 text-primary-foreground" />
         </div>
-        <h1 className="font-bold text-xl tracking-tight text-gradient">Magnet</h1>
+        <h1 className="font-bold text-xl tracking-tight text-gradient">
+          Magnet
+        </h1>
       </div>
 
       {/* Traffic lights decoration - Mac style (only for desktop) */}
@@ -124,7 +151,11 @@ export function Sidebar({
                 label={loc.name}
                 isActive={activeLocationIndex === index}
                 onClick={() => onSwitchLocation?.(index)}
-                color={activeLocationIndex === index ? "text-primary" : "text-muted-foreground"}
+                color={
+                  activeLocationIndex === index
+                    ? "text-primary"
+                    : "text-muted-foreground"
+                }
               />
             ))}
           </div>
@@ -175,9 +206,9 @@ export function Sidebar({
           <span className="text-primary">32%</span>
         </div>
         <div className="h-2 bg-muted/50 rounded-full overflow-hidden">
-          <div 
-            className="h-full bg-linear-to-r from-primary/80 to-primary rounded-full transition-all duration-500 shadow-[0_0_10px_rgba(var(--primary),0.3)]" 
-            style={{ width: "32%" }} 
+          <div
+            className="h-full bg-linear-to-r from-primary/80 to-primary rounded-full transition-all duration-500 shadow-[0_0_10px_rgba(var(--primary),0.3)]"
+            style={{ width: "32%" }}
           />
         </div>
         <div className="mt-2 flex justify-between text-[10px] text-muted-foreground font-medium">

@@ -9,7 +9,11 @@ interface CreateFolderDialogProps {
   onCreateFolder: (name: string) => Promise<void>;
 }
 
-export function CreateFolderDialog({ isOpen, onClose, onCreateFolder }: CreateFolderDialogProps) {
+export function CreateFolderDialog({
+  isOpen,
+  onClose,
+  onCreateFolder,
+}: CreateFolderDialogProps) {
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -37,7 +41,7 @@ export function CreateFolderDialog({ isOpen, onClose, onCreateFolder }: CreateFo
       await onCreateFolder(name.trim());
       setName("");
       onClose();
-    } catch (err) {
+    } catch {
       setError("Failed to create folder");
     }
     setLoading(false);
@@ -68,10 +72,17 @@ export function CreateFolderDialog({ isOpen, onClose, onCreateFolder }: CreateFo
             </div>
             <div>
               <h2 className="font-semibold text-lg">Create Folder</h2>
-              <p className="text-xs text-muted-foreground">Enter a name for your new folder</p>
+              <p className="text-xs text-muted-foreground">
+                Enter a name for your new folder
+              </p>
             </div>
           </div>
-          <Button variant="ghost" size="icon-sm" onClick={handleClose} className="rounded-lg">
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={handleClose}
+            className="rounded-lg"
+          >
             <X className="size-4" />
           </Button>
         </div>

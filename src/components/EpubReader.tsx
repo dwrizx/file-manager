@@ -1,6 +1,14 @@
 import { useState, useEffect, useRef } from "react";
 import ePub, { Book, Rendition } from "epubjs";
-import { ChevronLeft, ChevronRight, Loader2, List, X, AlertCircle, RefreshCw } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
+  List,
+  X,
+  AlertCircle,
+  RefreshCw,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -33,7 +41,7 @@ export function EpubReader({ url, fileName }: EpubReaderProps) {
     if (renditionRef.current) {
       try {
         renditionRef.current.destroy();
-      } catch (e) {
+      } catch {
         // Ignore cleanup errors
       }
       renditionRef.current = null;
@@ -41,7 +49,7 @@ export function EpubReader({ url, fileName }: EpubReaderProps) {
     if (bookRef.current) {
       try {
         bookRef.current.destroy();
-      } catch (e) {
+      } catch {
         // Ignore cleanup errors
       }
       bookRef.current = null;
@@ -99,7 +107,7 @@ export function EpubReader({ url, fileName }: EpubReaderProps) {
         let navigation: any = null;
         try {
           navigation = await book.loaded.navigation;
-          setToc(navigation?.toc as TocItem[] || []);
+          setToc((navigation?.toc as TocItem[]) || []);
         } catch (navErr) {
           console.warn("Could not load navigation:", navErr);
           setToc([]);
@@ -123,19 +131,19 @@ export function EpubReader({ url, fileName }: EpubReaderProps) {
           body: {
             "font-family": "Georgia, serif",
             "line-height": "1.8",
-            "padding": "20px 40px",
+            padding: "20px 40px",
             "max-width": "800px",
-            "margin": "0 auto",
+            margin: "0 auto",
           },
-          "p": {
+          p: {
             "margin-bottom": "1em",
           },
           "h1, h2, h3": {
             "font-family": "system-ui, sans-serif",
           },
-          "img": {
+          img: {
             "max-width": "100%",
-            "height": "auto",
+            height: "auto",
           },
         });
 
@@ -145,7 +153,11 @@ export function EpubReader({ url, fileName }: EpubReaderProps) {
         // Strategy 1: Try to display using spine
         try {
           const spine = await book.loaded.spine;
-          if (spine && (spine as any).items && (spine as any).items.length > 0) {
+          if (
+            spine &&
+            (spine as any).items &&
+            (spine as any).items.length > 0
+          ) {
             const firstItem = (spine as any).items[0];
             const href = firstItem.href || firstItem.url || firstItem.idref;
             if (href) {
@@ -216,7 +228,7 @@ export function EpubReader({ url, fileName }: EpubReaderProps) {
           setError(
             err instanceof Error
               ? err.message
-              : "Failed to load EPUB file. The file may be corrupted or in an unsupported format."
+              : "Failed to load EPUB file. The file may be corrupted or in an unsupported format.",
           );
           setLoading(false);
         }
@@ -311,7 +323,11 @@ export function EpubReader({ url, fileName }: EpubReaderProps) {
           <div className="absolute inset-y-0 left-0 w-72 bg-card border-r z-10 flex flex-col animate-in slide-in-from-left duration-200">
             <div className="flex items-center justify-between p-3 border-b">
               <h3 className="font-medium">Contents</h3>
-              <Button variant="ghost" size="icon-sm" onClick={() => setShowToc(false)}>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                onClick={() => setShowToc(false)}
+              >
                 <X className="size-4" />
               </Button>
             </div>
@@ -347,7 +363,7 @@ export function EpubReader({ url, fileName }: EpubReaderProps) {
             ref={containerRef}
             className={cn(
               "flex-1 h-full mx-12 bg-background overflow-auto",
-              loading && "flex items-center justify-center"
+              loading && "flex items-center justify-center",
             )}
           >
             {loading && (
@@ -384,21 +400,34 @@ export function EpubReader({ url, fileName }: EpubReaderProps) {
   );
 }
 
-function TocEntry({ item, onSelect, depth = 0 }: { item: TocItem; onSelect: (href: string) => void; depth?: number }) {
+function TocEntry({
+  item,
+  onSelect,
+  depth = 0,
+}: {
+  item: TocItem;
+  onSelect: (href: string) => void;
+  depth?: number;
+}) {
   return (
     <>
       <button
         onClick={() => onSelect(item.href)}
         className={cn(
           "w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-muted transition-colors truncate",
-          depth > 0 && "pl-6"
+          depth > 0 && "pl-6",
         )}
-        style={{ paddingLeft: `${(depth * 12) + 12}px` }}
+        style={{ paddingLeft: `${depth * 12 + 12}px` }}
       >
         {item.label}
       </button>
       {item.subitems?.map((subitem, index) => (
-        <TocEntry key={index} item={subitem} onSelect={onSelect} depth={depth + 1} />
+        <TocEntry
+          key={index}
+          item={subitem}
+          onSelect={onSelect}
+          depth={depth + 1}
+        />
       ))}
     </>
   );

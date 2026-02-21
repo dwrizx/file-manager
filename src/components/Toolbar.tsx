@@ -92,7 +92,10 @@ export function Toolbar({
   // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (sortMenuRef.current && !sortMenuRef.current.contains(event.target as Node)) {
+      if (
+        sortMenuRef.current &&
+        !sortMenuRef.current.contains(event.target as Node)
+      ) {
         setShowSortMenu(false);
       }
     }
@@ -100,7 +103,8 @@ export function Toolbar({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const currentSortLabel = SORT_OPTIONS.find((o) => o.field === sortField)?.label || "Name";
+  const currentSortLabel =
+    SORT_OPTIONS.find((o) => o.field === sortField)?.label || "Name";
 
   return (
     <div className="flex items-center gap-2 px-3 py-2 bg-transparent">
@@ -184,7 +188,9 @@ export function Toolbar({
           title="Sort files"
         >
           <ArrowUpDown className="size-3.5" />
-          <span className="hidden sm:inline font-medium text-xs tracking-tight">{currentSortLabel}</span>
+          <span className="hidden sm:inline font-medium text-xs tracking-tight">
+            {currentSortLabel}
+          </span>
           {sortOrder === "asc" ? (
             <ArrowUp className="size-3" />
           ) : (
@@ -196,7 +202,9 @@ export function Toolbar({
         {showSortMenu && (
           <div className="absolute top-full left-0 mt-2 w-48 glass rounded-2xl shadow-xl py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-300">
             <div className="px-3 py-1 mb-1 border-b border-border/30">
-              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Sort by</span>
+              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                Sort by
+              </span>
             </div>
             {SORT_OPTIONS.map((option) => (
               <button
@@ -209,7 +217,7 @@ export function Toolbar({
                 }}
                 className={cn(
                   "w-full flex items-center justify-between px-3 py-2 text-sm hover:bg-primary/5 transition-colors",
-                  option.field === sortField && "text-primary font-semibold"
+                  option.field === sortField && "text-primary font-semibold",
                 )}
               >
                 <span>{option.label}</span>
@@ -304,7 +312,7 @@ export function Toolbar({
           title={showHidden ? "Hide hidden files" : "Show hidden files"}
           className={cn(
             "shrink-0 hover:bg-muted/50 rounded-xl",
-            showHidden && "text-primary bg-primary/5"
+            showHidden && "text-primary bg-primary/5",
           )}
         >
           {showHidden ? (
@@ -323,7 +331,7 @@ export function Toolbar({
         >
           <Settings className="size-4.5" />
         </Button>
-        
+
         <Button
           variant="ghost"
           size="icon"
@@ -361,11 +369,10 @@ function ViewModeButton({
         "size-7 rounded-lg flex items-center justify-center transition-all duration-300",
         active
           ? "bg-background shadow-sm text-primary scale-105"
-          : "text-muted-foreground/70 hover:text-foreground hover:bg-background/30"
+          : "text-muted-foreground/70 hover:text-foreground hover:bg-background/30",
       )}
     >
       {children}
     </button>
   );
 }
-

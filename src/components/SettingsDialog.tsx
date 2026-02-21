@@ -10,7 +10,11 @@ interface SettingsDialogProps {
   onConfigChanged: () => void;
 }
 
-export function SettingsDialog({ isOpen, onClose, onConfigChanged }: SettingsDialogProps) {
+export function SettingsDialog({
+  isOpen,
+  onClose,
+  onConfigChanged,
+}: SettingsDialogProps) {
   const [dataDir, setDataDir] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -28,7 +32,7 @@ export function SettingsDialog({ isOpen, onClose, onConfigChanged }: SettingsDia
       if (!res.ok) throw new Error("Failed to load config");
       const config = await res.json();
       setDataDir(config.dataDir);
-    } catch (err) {
+    } catch {
       setError("Could not load settings");
     } finally {
       setLoading(false);
@@ -48,10 +52,10 @@ export function SettingsDialog({ isOpen, onClose, onConfigChanged }: SettingsDia
       });
 
       if (!res.ok) throw new Error("Failed to save config");
-      
+
       onConfigChanged();
       onClose();
-    } catch (err) {
+    } catch {
       setError("Failed to save settings");
     } finally {
       setLoading(false);
@@ -81,8 +85,8 @@ export function SettingsDialog({ isOpen, onClose, onConfigChanged }: SettingsDia
               disabled={loading}
             />
             <p className="text-xs text-muted-foreground">
-              Absolute path to the directory where files will be stored.
-              If it doesn't exist, it will be created automatically.
+              Absolute path to the directory where files will be stored. If it
+              doesn't exist, it will be created automatically.
             </p>
           </div>
 
@@ -94,7 +98,12 @@ export function SettingsDialog({ isOpen, onClose, onConfigChanged }: SettingsDia
           )}
 
           <div className="flex justify-end gap-2 pt-2">
-            <Button type="button" variant="ghost" onClick={onClose} disabled={loading}>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={onClose}
+              disabled={loading}
+            >
               Cancel
             </Button>
             <Button type="submit" disabled={loading} className="gap-2">

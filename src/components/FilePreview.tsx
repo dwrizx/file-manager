@@ -1,5 +1,15 @@
 import { useState, useEffect, useRef } from "react";
-import { X, Download, Play, Pause, Volume2, VolumeX, Maximize, SkipBack, SkipForward } from "lucide-react";
+import {
+  X,
+  Download,
+  Play,
+  Pause,
+  Volume2,
+  VolumeX,
+  Maximize,
+  SkipBack,
+  SkipForward,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FileIcon } from "./FileIcon";
 import { CodeHighlight } from "./CodeHighlight";
@@ -28,10 +38,14 @@ export function FilePreview({ file, onClose, onDownload }: FilePreviewProps) {
 
   // Check for dark mode
   useEffect(() => {
-    const checkDark = () => setIsDark(document.documentElement.classList.contains("dark"));
+    const checkDark = () =>
+      setIsDark(document.documentElement.classList.contains("dark"));
     checkDark();
     const observer = new MutationObserver(checkDark);
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
     return () => observer.disconnect();
   }, []);
 
@@ -52,7 +66,9 @@ export function FilePreview({ file, onClose, onDownload }: FilePreviewProps) {
     const url = `/api/files/${encodeURIComponent(file.path)}`;
 
     // Image files
-    if (["jpg", "jpeg", "png", "gif", "webp", "svg", "bmp", "ico"].includes(ext)) {
+    if (
+      ["jpg", "jpeg", "png", "gif", "webp", "svg", "bmp", "ico"].includes(ext)
+    ) {
       setContent(url);
       return;
     }
@@ -82,7 +98,51 @@ export function FilePreview({ file, onClose, onDownload }: FilePreviewProps) {
     }
 
     // Text/code files
-    if (["txt", "md", "json", "js", "ts", "tsx", "jsx", "css", "html", "xml", "yaml", "yml", "log", "sh", "py", "java", "c", "cpp", "h", "go", "rs", "sql", "env", "gitignore", "dockerfile", "makefile", "toml", "ini", "cfg", "conf", "properties", "gradle", "kt", "swift", "rb", "php", "pl", "r", "scala", "vue", "svelte"].includes(ext)) {
+    if (
+      [
+        "txt",
+        "md",
+        "json",
+        "js",
+        "ts",
+        "tsx",
+        "jsx",
+        "css",
+        "html",
+        "xml",
+        "yaml",
+        "yml",
+        "log",
+        "sh",
+        "py",
+        "java",
+        "c",
+        "cpp",
+        "h",
+        "go",
+        "rs",
+        "sql",
+        "env",
+        "gitignore",
+        "dockerfile",
+        "makefile",
+        "toml",
+        "ini",
+        "cfg",
+        "conf",
+        "properties",
+        "gradle",
+        "kt",
+        "swift",
+        "rb",
+        "php",
+        "pl",
+        "r",
+        "scala",
+        "vue",
+        "svelte",
+      ].includes(ext)
+    ) {
       setLoading(true);
       fetch(url)
         .then((res) => res.text())
@@ -144,7 +204,10 @@ export function FilePreview({ file, onClose, onDownload }: FilePreviewProps) {
 
   const skip = (seconds: number) => {
     if (mediaRef.current) {
-      mediaRef.current.currentTime = Math.max(0, Math.min(duration, currentTime + seconds));
+      mediaRef.current.currentTime = Math.max(
+        0,
+        Math.min(duration, currentTime + seconds),
+      );
     }
   };
 
@@ -164,12 +227,63 @@ export function FilePreview({ file, onClose, onDownload }: FilePreviewProps) {
   if (!file) return null;
 
   const ext = getFileExtension(file.name);
-  const isImage = ["jpg", "jpeg", "png", "gif", "webp", "svg", "bmp", "ico"].includes(ext);
+  const isImage = [
+    "jpg",
+    "jpeg",
+    "png",
+    "gif",
+    "webp",
+    "svg",
+    "bmp",
+    "ico",
+  ].includes(ext);
   const isVideo = ["mp4", "webm", "ogg", "mov"].includes(ext);
   const isAudio = ["mp3", "wav", "ogg", "m4a", "flac", "aac"].includes(ext);
   const isPdf = ext === "pdf";
   const isEpub = ext === "epub";
-  const isCode = ["txt", "md", "json", "js", "ts", "tsx", "jsx", "css", "html", "xml", "yaml", "yml", "log", "sh", "py", "java", "c", "cpp", "h", "go", "rs", "sql", "env", "gitignore", "dockerfile", "makefile", "toml", "ini", "cfg", "conf", "properties", "gradle", "kt", "swift", "rb", "php", "pl", "r", "scala", "vue", "svelte"].includes(ext);
+  const isCode = [
+    "txt",
+    "md",
+    "json",
+    "js",
+    "ts",
+    "tsx",
+    "jsx",
+    "css",
+    "html",
+    "xml",
+    "yaml",
+    "yml",
+    "log",
+    "sh",
+    "py",
+    "java",
+    "c",
+    "cpp",
+    "h",
+    "go",
+    "rs",
+    "sql",
+    "env",
+    "gitignore",
+    "dockerfile",
+    "makefile",
+    "toml",
+    "ini",
+    "cfg",
+    "conf",
+    "properties",
+    "gradle",
+    "kt",
+    "swift",
+    "rb",
+    "php",
+    "pl",
+    "r",
+    "scala",
+    "vue",
+    "svelte",
+  ].includes(ext);
 
   return (
     <div
@@ -248,13 +362,27 @@ export function FilePreview({ file, onClose, onDownload }: FilePreviewProps) {
                 />
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="icon-sm" onClick={() => skip(-10)} title="Rewind 10s">
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      onClick={() => skip(-10)}
+                      title="Rewind 10s"
+                    >
                       <SkipBack className="size-4" />
                     </Button>
                     <Button variant="default" size="icon" onClick={togglePlay}>
-                      {isPlaying ? <Pause className="size-5" /> : <Play className="size-5 ml-0.5" />}
+                      {isPlaying ? (
+                        <Pause className="size-5" />
+                      ) : (
+                        <Play className="size-5 ml-0.5" />
+                      )}
                     </Button>
-                    <Button variant="ghost" size="icon-sm" onClick={() => skip(10)} title="Forward 10s">
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      onClick={() => skip(10)}
+                      title="Forward 10s"
+                    >
                       <SkipForward className="size-4" />
                     </Button>
                     <span className="text-sm text-muted-foreground ml-2">
@@ -262,10 +390,24 @@ export function FilePreview({ file, onClose, onDownload }: FilePreviewProps) {
                     </span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="icon-sm" onClick={toggleMute} title={isMuted ? "Unmute" : "Mute"}>
-                      {isMuted ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      onClick={toggleMute}
+                      title={isMuted ? "Unmute" : "Mute"}
+                    >
+                      {isMuted ? (
+                        <VolumeX className="size-4" />
+                      ) : (
+                        <Volume2 className="size-4" />
+                      )}
                     </Button>
-                    <Button variant="ghost" size="icon-sm" onClick={handleFullscreen} title="Fullscreen">
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      onClick={handleFullscreen}
+                      title="Fullscreen"
+                    >
                       <Maximize className="size-4" />
                     </Button>
                   </div>
@@ -278,7 +420,9 @@ export function FilePreview({ file, onClose, onDownload }: FilePreviewProps) {
                 <div className="size-32 rounded-full bg-gradient-to-br from-primary/30 to-primary/5 flex items-center justify-center shadow-xl animate-pulse">
                   <FileIcon type="audio" className="size-16" />
                 </div>
-                <p className="font-medium text-lg text-center max-w-md truncate">{file.name}</p>
+                <p className="font-medium text-lg text-center max-w-md truncate">
+                  {file.name}
+                </p>
               </div>
               <audio
                 ref={mediaRef as React.RefObject<HTMLAudioElement>}
@@ -304,17 +448,45 @@ export function FilePreview({ file, onClose, onDownload }: FilePreviewProps) {
                   <span>{formatTime(duration)}</span>
                 </div>
                 <div className="flex items-center justify-center gap-4">
-                  <Button variant="ghost" size="icon" onClick={() => skip(-10)} title="Rewind 10s">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => skip(-10)}
+                    title="Rewind 10s"
+                  >
                     <SkipBack className="size-5" />
                   </Button>
-                  <Button variant="default" size="lg" className="size-16 rounded-full shadow-lg" onClick={togglePlay}>
-                    {isPlaying ? <Pause className="size-7" /> : <Play className="size-7 ml-1" />}
+                  <Button
+                    variant="default"
+                    size="lg"
+                    className="size-16 rounded-full shadow-lg"
+                    onClick={togglePlay}
+                  >
+                    {isPlaying ? (
+                      <Pause className="size-7" />
+                    ) : (
+                      <Play className="size-7 ml-1" />
+                    )}
                   </Button>
-                  <Button variant="ghost" size="icon" onClick={() => skip(10)} title="Forward 10s">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => skip(10)}
+                    title="Forward 10s"
+                  >
                     <SkipForward className="size-5" />
                   </Button>
-                  <Button variant="ghost" size="icon" onClick={toggleMute} title={isMuted ? "Unmute" : "Mute"}>
-                    {isMuted ? <VolumeX className="size-5" /> : <Volume2 className="size-5" />}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={toggleMute}
+                    title={isMuted ? "Unmute" : "Mute"}
+                  >
+                    {isMuted ? (
+                      <VolumeX className="size-5" />
+                    ) : (
+                      <Volume2 className="size-5" />
+                    )}
                   </Button>
                 </div>
               </div>
@@ -334,7 +506,9 @@ export function FilePreview({ file, onClose, onDownload }: FilePreviewProps) {
           ) : (
             <div className="flex flex-col items-center justify-center p-8 min-h-96 text-center">
               <FileIcon type={file.type} className="size-20 mb-6 opacity-50" />
-              <h3 className="text-lg font-medium mb-2">Preview not available</h3>
+              <h3 className="text-lg font-medium mb-2">
+                Preview not available
+              </h3>
               <p className="text-muted-foreground mb-6">
                 This file type cannot be previewed in the browser.
               </p>
@@ -354,6 +528,9 @@ function formatBytes(bytes: number): string {
   if (bytes <= 0) return "0 B";
   const k = 1024;
   const sizes = ["B", "KB", "MB", "GB", "TB"];
-  const i = Math.min(Math.floor(Math.log(bytes) / Math.log(k)), sizes.length - 1);
+  const i = Math.min(
+    Math.floor(Math.log(bytes) / Math.log(k)),
+    sizes.length - 1,
+  );
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
 }

@@ -22,7 +22,7 @@ export function Breadcrumb({ path, onNavigate }: BreadcrumbProps) {
           "flex items-center gap-2 px-3 py-1.5 rounded-xl transition-all duration-200 shrink-0",
           parts.length === 0
             ? "bg-primary/10 text-primary font-bold shadow-xs"
-            : "hover:bg-muted/60 text-muted-foreground hover:text-foreground"
+            : "hover:bg-muted/60 text-muted-foreground hover:text-foreground",
         )}
       >
         <Home className="size-4" />
@@ -30,7 +30,10 @@ export function Breadcrumb({ path, onNavigate }: BreadcrumbProps) {
       </button>
 
       {parts.map((part, index) => (
-        <div key={index} className="flex items-center gap-1 shrink-0 animate-in slide-in-from-left-2 duration-300">
+        <div
+          key={index}
+          className="flex items-center gap-1 shrink-0 animate-in slide-in-from-left-2 duration-300"
+        >
           <ChevronRight className="size-3.5 text-muted-foreground/30 mx-0.5" />
           <button
             onClick={() => handleClick(index)}
@@ -38,11 +41,20 @@ export function Breadcrumb({ path, onNavigate }: BreadcrumbProps) {
               "flex items-center gap-2 px-3 py-1.5 rounded-xl transition-all duration-200",
               index === parts.length - 1
                 ? "bg-primary/10 text-primary font-bold shadow-xs"
-                : "hover:bg-muted/60 text-muted-foreground hover:text-foreground"
+                : "hover:bg-muted/60 text-muted-foreground hover:text-foreground",
             )}
           >
-            <Folder className={cn("size-3.5", index === parts.length - 1 ? "text-primary" : "text-amber-500/70")} />
-            <span className="max-w-[150px] truncate font-medium tracking-tight">{part}</span>
+            <Folder
+              className={cn(
+                "size-3.5",
+                index === parts.length - 1
+                  ? "text-primary"
+                  : "text-amber-500/70",
+              )}
+            />
+            <span className="max-w-[150px] truncate font-medium tracking-tight">
+              {part}
+            </span>
           </button>
         </div>
       ))}

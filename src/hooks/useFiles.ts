@@ -76,7 +76,7 @@ export function useFiles(): UseFilesReturn {
   const canGoForward = historyIndex < history.length - 1;
 
   const toggleShowHidden = useCallback(() => {
-    setShowHidden(prev => !prev);
+    setShowHidden((prev) => !prev);
   }, []);
 
   // Fetch config on mount
@@ -112,7 +112,7 @@ export function useFiles(): UseFilesReturn {
         setHistoryIndex(0);
         // refresh will be triggered by useEffect [currentPath] or [activeLocationIndex]
       }
-    } catch (err) {
+    } catch {
       setError("Failed to switch location");
     } finally {
       setLoading(false);
@@ -120,20 +120,25 @@ export function useFiles(): UseFilesReturn {
   }, []);
 
   // Toggle sort - if same field, toggle order; if different field, set new field with asc
-  const toggleSort = useCallback((field: SortField) => {
-    if (field === sortField) {
-      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
-    } else {
-      setSortField(field);
-      setSortOrder("asc");
-    }
-  }, [sortField, sortOrder]);
+  const toggleSort = useCallback(
+    (field: SortField) => {
+      if (field === sortField) {
+        setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+      } else {
+        setSortField(field);
+        setSortOrder("asc");
+      }
+    },
+    [sortField, sortOrder],
+  );
 
   // Filter and sort files
   const filteredFiles = useMemo(() => {
     // Filter
     let result = files.filter((file) => {
-      const matchesSearch = file.name.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesSearch = file.name
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase());
       const matchesType = !filterType || file.type === filterType;
       const isHidden = file.name.startsWith(".");
       const matchesHidden = showHidden || !isHidden;
@@ -150,13 +155,16 @@ export function useFiles(): UseFilesReturn {
       let comparison = 0;
       switch (sortField) {
         case "name":
-          comparison = a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
+          comparison = a.name.localeCompare(b.name, undefined, {
+            sensitivity: "base",
+          });
           break;
         case "size":
           comparison = a.size - b.size;
           break;
         case "createdAt":
-          comparison = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+          comparison =
+            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
           break;
         case "type":
           comparison = a.type.localeCompare(b.type);
@@ -173,7 +181,9 @@ export function useFiles(): UseFilesReturn {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch(`/api/files?path=${encodeURIComponent(currentPath)}`);
+      const response = await fetch(
+        `/api/files?path=${encodeURIComponent(currentPath)}`,
+      );
       if (!response.ok) throw new Error("Failed to fetch files");
       const data = await response.json();
       setFiles(data.files);
@@ -185,35 +195,47 @@ export function useFiles(): UseFilesReturn {
     }
   }, [currentPath, activeLocationIndex]);
 
-  const uploadFiles = useCallback(async (filesToUpload: File[]) => {
-    const formData = new FormData();
-    for (const file of filesToUpload) {
-      formData.append("files", file);
-    }
+  const uploadFiles = useCallback(
+    async (filesToUpload: File[]) => {
+      const formData = new FormData();
+      for (const file of filesToUpload) {
+        formData.append("files", file);
+      }
 
-    const response = await fetch(`/api/files?path=${encodeURIComponent(currentPath)}`, {
-      method: "POST",
-      body: formData,
-    });
+      const response = await fetch(
+        `/api/files?path=${encodeURIComponent(currentPath)}`,
+        {
+          method: "POST",
+          body: formData,
+        },
+      );
 
-    if (!response.ok) {
-      throw new Error("Upload failed");
-    }
+      if (!response.ok) {
+        throw new Error("Upload failed");
+      }
 
-    await refresh();
-  }, [currentPath, refresh]);
+      await refresh();
+    },
+    [currentPath, refresh],
+  );
 
-  const deleteFile = useCallback(async (filePath: string) => {
-    const response = await fetch(`/api/files/${encodeURIComponent(filePath)}`, {
-      method: "DELETE",
-    });
+  const deleteFile = useCallback(
+    async (filePath: string) => {
+      const response = await fetch(
+        `/api/files/${encodeURIComponent(filePath)}`,
+        {
+          method: "DELETE",
+        },
+      );
 
-    if (!response.ok) {
-      throw new Error("Delete failed");
-    }
+      if (!response.ok) {
+        throw new Error("Delete failed");
+      }
 
-    await refresh();
-  }, [refresh]);
+      await refresh();
+    },
+    [refresh],
+  );
 
   const deleteSelected = useCallback(async () => {
     for (const path of selectedFiles) {
@@ -233,33 +255,39 @@ export function useFiles(): UseFilesReturn {
     document.body.removeChild(link);
   }, []);
 
-  const createFolder = useCallback(async (name: string) => {
-    const response = await fetch("/api/folders", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, path: currentPath }),
-    });
+  const createFolder = useCallback(
+    async (name: string) => {
+      const response = await fetch("/api/folders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, path: currentPath }),
+      });
 
-    if (!response.ok) {
-      throw new Error("Failed to create folder");
-    }
+      if (!response.ok) {
+        throw new Error("Failed to create folder");
+      }
 
-    await refresh();
-  }, [currentPath, refresh]);
+      await refresh();
+    },
+    [currentPath, refresh],
+  );
 
-  const moveFile = useCallback(async (source: string, destination: string) => {
-    const response = await fetch("/api/move", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ source, destination }),
-    });
+  const moveFile = useCallback(
+    async (source: string, destination: string) => {
+      const response = await fetch("/api/move", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ source, destination }),
+      });
 
-    if (!response.ok) {
-      throw new Error("Move failed");
-    }
+      if (!response.ok) {
+        throw new Error("Move failed");
+      }
 
-    await refresh();
-  }, [refresh]);
+      await refresh();
+    },
+    [refresh],
+  );
 
   const toggleSelect = useCallback((path: string) => {
     setSelectedFiles((prev) => {
@@ -281,16 +309,19 @@ export function useFiles(): UseFilesReturn {
     setSelectedFiles(new Set());
   }, []);
 
-  const navigateToFolder = useCallback((path: string) => {
-    // Add to history
-    const newHistory = history.slice(0, historyIndex + 1);
-    newHistory.push(path);
-    setHistory(newHistory);
-    setHistoryIndex(newHistory.length - 1);
-    setCurrentPath(path);
-    setSearchQuery("");
-    setFilterType("");
-  }, [history, historyIndex]);
+  const navigateToFolder = useCallback(
+    (path: string) => {
+      // Add to history
+      const newHistory = history.slice(0, historyIndex + 1);
+      newHistory.push(path);
+      setHistory(newHistory);
+      setHistoryIndex(newHistory.length - 1);
+      setCurrentPath(path);
+      setSearchQuery("");
+      setFilterType("");
+    },
+    [history, historyIndex],
+  );
 
   const goBack = useCallback(() => {
     if (canGoBack) {

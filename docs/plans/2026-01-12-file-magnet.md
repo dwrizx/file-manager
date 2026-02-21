@@ -13,6 +13,7 @@
 ## Task 1: Create Data Directory & File Utilities
 
 **Files:**
+
 - Create: `src/utils/files.ts`
 - Create: `data/.gitkeep`
 
@@ -66,12 +67,15 @@ export async function listFiles(): Promise<FileInfo[]> {
     }
   }
 
-  return files.sort((a, b) =>
-    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  return files.sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
   );
 }
 
-export async function saveFile(name: string, data: Uint8Array): Promise<FileInfo> {
+export async function saveFile(
+  name: string,
+  data: Uint8Array,
+): Promise<FileInfo> {
   await ensureDataDir();
   const safeName = name.replace(/[^a-zA-Z0-9._-]/g, "_");
   const filePath = join(DATA_DIR, safeName);
@@ -167,6 +171,7 @@ git commit -m "feat: add file utility functions for data directory operations"
 ## Task 2: Create File API Endpoints
 
 **Files:**
+
 - Modify: `src/index.ts`
 
 **Step 1: Update server with file API routes**
@@ -191,7 +196,11 @@ const server = serve({
 
       async POST(req) {
         const formData = await req.formData();
-        const uploadedFiles: Array<{ name: string; size: number; type: string }> = [];
+        const uploadedFiles: Array<{
+          name: string;
+          size: number;
+          type: string;
+        }> = [];
 
         for (const [_, value] of formData.entries()) {
           if (value instanceof File) {
@@ -204,7 +213,7 @@ const server = serve({
         return Response.json({
           success: true,
           files: uploadedFiles,
-          message: `${uploadedFiles.length} file(s) uploaded successfully`
+          message: `${uploadedFiles.length} file(s) uploaded successfully`,
         });
       },
     },
@@ -268,6 +277,7 @@ git commit -m "feat: add file upload, download, list, and delete API endpoints"
 ## Task 3: Create File Type Icon Component
 
 **Files:**
+
 - Create: `src/components/FileIcon.tsx`
 
 **Step 1: Write FileIcon component**
@@ -322,6 +332,7 @@ git commit -m "feat: add FileIcon component with type-based icons"
 ## Task 4: Create DropZone Component
 
 **Files:**
+
 - Create: `src/components/DropZone.tsx`
 
 **Step 1: Write DropZone component with drag-and-drop**
@@ -343,13 +354,16 @@ export function DropZone({ onUpload, disabled }: DropZoneProps) {
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!disabled && !isUploading) {
-      setIsDragging(true);
-    }
-  }, [disabled, isUploading]);
+  const handleDragOver = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (!disabled && !isUploading) {
+        setIsDragging(true);
+      }
+    },
+    [disabled, isUploading],
+  );
 
   const handleDragLeave = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -357,23 +371,26 @@ export function DropZone({ onUpload, disabled }: DropZoneProps) {
     setIsDragging(false);
   }, []);
 
-  const handleDrop = useCallback(async (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
+  const handleDrop = useCallback(
+    async (e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsDragging(false);
 
-    if (disabled || isUploading) return;
+      if (disabled || isUploading) return;
 
-    const files = Array.from(e.dataTransfer.files);
-    if (files.length > 0) {
-      setIsUploading(true);
-      try {
-        await onUpload(files);
-      } finally {
-        setIsUploading(false);
+      const files = Array.from(e.dataTransfer.files);
+      if (files.length > 0) {
+        setIsUploading(true);
+        try {
+          await onUpload(files);
+        } finally {
+          setIsUploading(false);
+        }
       }
-    }
-  }, [onUpload, disabled, isUploading]);
+    },
+    [onUpload, disabled, isUploading],
+  );
 
   const handleClick = () => {
     if (!disabled && !isUploading) {
@@ -423,10 +440,12 @@ export function DropZone({ onUpload, disabled }: DropZoneProps) {
         {isUploading ? (
           <Loader2 className="size-12 text-primary animate-spin" />
         ) : (
-          <Upload className={cn(
-            "size-12 transition-colors",
-            isDragging ? "text-primary" : "text-muted-foreground"
-          )} />
+          <Upload
+            className={cn(
+              "size-12 transition-colors",
+              isDragging ? "text-primary" : "text-muted-foreground",
+            )}
+          />
         )}
 
         <div>
@@ -459,6 +478,7 @@ git commit -m "feat: add DropZone component with drag-and-drop upload"
 ## Task 5: Create FileList Component
 
 **Files:**
+
 - Create: `src/components/FileList.tsx`
 
 **Step 1: Write FileList component**
@@ -504,7 +524,12 @@ function formatDate(dateString: string): string {
   });
 }
 
-export function FileList({ files, loading, onDownload, onDelete }: FileListProps) {
+export function FileList({
+  files,
+  loading,
+  onDownload,
+  onDelete,
+}: FileListProps) {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -600,6 +625,7 @@ git commit -m "feat: add FileList component with download and delete actions"
 ## Task 6: Create useFiles Hook
 
 **Files:**
+
 - Create: `src/hooks/useFiles.ts`
 
 **Step 1: Write useFiles custom hook**
@@ -646,35 +672,44 @@ export function useFiles(): UseFilesReturn {
     }
   }, []);
 
-  const uploadFiles = useCallback(async (filesToUpload: File[]) => {
-    const formData = new FormData();
-    for (const file of filesToUpload) {
-      formData.append("files", file);
-    }
+  const uploadFiles = useCallback(
+    async (filesToUpload: File[]) => {
+      const formData = new FormData();
+      for (const file of filesToUpload) {
+        formData.append("files", file);
+      }
 
-    const response = await fetch("/api/files", {
-      method: "POST",
-      body: formData,
-    });
+      const response = await fetch("/api/files", {
+        method: "POST",
+        body: formData,
+      });
 
-    if (!response.ok) {
-      throw new Error("Upload failed");
-    }
+      if (!response.ok) {
+        throw new Error("Upload failed");
+      }
 
-    await refresh();
-  }, [refresh]);
+      await refresh();
+    },
+    [refresh],
+  );
 
-  const deleteFile = useCallback(async (filename: string) => {
-    const response = await fetch(`/api/files/${encodeURIComponent(filename)}`, {
-      method: "DELETE",
-    });
+  const deleteFile = useCallback(
+    async (filename: string) => {
+      const response = await fetch(
+        `/api/files/${encodeURIComponent(filename)}`,
+        {
+          method: "DELETE",
+        },
+      );
 
-    if (!response.ok) {
-      throw new Error("Delete failed");
-    }
+      if (!response.ok) {
+        throw new Error("Delete failed");
+      }
 
-    await refresh();
-  }, [refresh]);
+      await refresh();
+    },
+    [refresh],
+  );
 
   const downloadFile = useCallback((filename: string) => {
     const link = document.createElement("a");
@@ -713,6 +748,7 @@ git commit -m "feat: add useFiles hook for file operations state management"
 ## Task 7: Create FileManager Component
 
 **Files:**
+
 - Create: `src/components/FileManager.tsx`
 
 **Step 1: Write main FileManager component**
@@ -728,7 +764,15 @@ import { FileList } from "./FileList";
 import { useFiles } from "@/hooks/useFiles";
 
 export function FileManager() {
-  const { files, loading, error, refresh, uploadFiles, deleteFile, downloadFile } = useFiles();
+  const {
+    files,
+    loading,
+    error,
+    refresh,
+    uploadFiles,
+    deleteFile,
+    downloadFile,
+  } = useFiles();
 
   return (
     <div className="w-full max-w-3xl mx-auto space-y-6">
@@ -758,9 +802,7 @@ export function FileManager() {
           )}
 
           <div>
-            <h3 className="text-lg font-medium mb-3">
-              Files ({files.length})
-            </h3>
+            <h3 className="text-lg font-medium mb-3">Files ({files.length})</h3>
             <FileList
               files={files}
               loading={loading}
@@ -787,6 +829,7 @@ git commit -m "feat: add FileManager main component combining all file UI"
 ## Task 8: Update App Component
 
 **Files:**
+
 - Modify: `src/App.tsx`
 - Modify: `src/index.html`
 
@@ -841,6 +884,7 @@ git commit -m "feat: integrate FileManager into main App"
 ## Task 9: Update Styles for Dark Mode
 
 **Files:**
+
 - Modify: `src/index.css`
 
 **Step 1: Update CSS for cleaner file manager look**
@@ -873,6 +917,7 @@ git commit -m "style: simplify body styles for file manager"
 ## Task 10: Delete Unused Files
 
 **Files:**
+
 - Delete: `src/APITester.tsx`
 - Delete: `src/logo.svg` (optional, keep if wanted)
 - Delete: `src/react.svg` (optional, keep if wanted)
@@ -922,6 +967,7 @@ git commit -m "feat: complete File Magnet file manager implementation"
 ## Summary
 
 Fitur yang diimplementasikan:
+
 1. **Upload file** - via drag & drop atau click to browse
 2. **Download file** - tombol download di setiap file
 3. **Delete file** - tombol hapus dengan konfirmasi

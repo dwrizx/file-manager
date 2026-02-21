@@ -8,21 +8,36 @@ interface DropZoneProps {
   compact?: boolean;
 }
 
-export function DropZone({ onUpload, disabled, compact = false }: DropZoneProps) {
+export function DropZone({
+  onUpload,
+  disabled,
+  compact = false,
+}: DropZoneProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState<{ name: string; count: number } | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<{
+    name: string;
+    count: number;
+  } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dragCounter = useRef(0);
 
-  const handleDragEnter = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    dragCounter.current++;
-    if (!disabled && !isUploading && e.dataTransfer.items && e.dataTransfer.items.length > 0) {
-      setIsDragging(true);
-    }
-  }, [disabled, isUploading]);
+  const handleDragEnter = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dragCounter.current++;
+      if (
+        !disabled &&
+        !isUploading &&
+        e.dataTransfer.items &&
+        e.dataTransfer.items.length > 0
+      ) {
+        setIsDragging(true);
+      }
+    },
+    [disabled, isUploading],
+  );
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -38,29 +53,32 @@ export function DropZone({ onUpload, disabled, compact = false }: DropZoneProps)
     }
   }, []);
 
-  const handleDrop = useCallback(async (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-    dragCounter.current = 0;
+  const handleDrop = useCallback(
+    async (e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsDragging(false);
+      dragCounter.current = 0;
 
-    if (disabled || isUploading) return;
+      if (disabled || isUploading) return;
 
-    const files = Array.from(e.dataTransfer.files);
-    if (files.length > 0) {
-      setIsUploading(true);
-      const firstFile = files[0];
-      if (firstFile) {
-        setUploadProgress({ name: firstFile.name, count: files.length });
+      const files = Array.from(e.dataTransfer.files);
+      if (files.length > 0) {
+        setIsUploading(true);
+        const firstFile = files[0];
+        if (firstFile) {
+          setUploadProgress({ name: firstFile.name, count: files.length });
+        }
+        try {
+          await onUpload(files);
+        } finally {
+          setIsUploading(false);
+          setUploadProgress(null);
+        }
       }
-      try {
-        await onUpload(files);
-      } finally {
-        setIsUploading(false);
-        setUploadProgress(null);
-      }
-    }
-  }, [onUpload, disabled, isUploading]);
+    },
+    [onUpload, disabled, isUploading],
+  );
 
   const handleClick = () => {
     if (!disabled && !isUploading) {
@@ -113,10 +131,12 @@ export function DropZone({ onUpload, disabled, compact = false }: DropZoneProps)
           disabled={disabled || isUploading}
         />
 
-        <div className={cn(
-          "size-10 rounded-lg flex items-center justify-center transition-colors shrink-0",
-          isDragging ? "bg-primary/20" : "bg-muted"
-        )}>
+        <div
+          className={cn(
+            "size-10 rounded-lg flex items-center justify-center transition-colors shrink-0",
+            isDragging ? "bg-primary/20" : "bg-muted",
+          )}
+        >
           {isUploading ? (
             <Loader2 className="size-5 text-primary animate-spin" />
           ) : isDragging ? (
@@ -127,10 +147,12 @@ export function DropZone({ onUpload, disabled, compact = false }: DropZoneProps)
         </div>
 
         <div className="flex-1 min-w-0">
-          <p className={cn(
-            "text-sm font-medium transition-colors truncate",
-            isDragging ? "text-primary" : "text-foreground"
-          )}>
+          <p
+            className={cn(
+              "text-sm font-medium transition-colors truncate",
+              isDragging ? "text-primary" : "text-foreground",
+            )}
+          >
             {isUploading
               ? `Uploading ${uploadProgress?.count || 0} file(s)...`
               : isDragging
@@ -138,9 +160,7 @@ export function DropZone({ onUpload, disabled, compact = false }: DropZoneProps)
                 : "Drop files or click to upload"}
           </p>
           <p className="text-xs text-muted-foreground truncate">
-            {isUploading
-              ? uploadProgress?.name
-              : "Supports all file types"}
+            {isUploading ? uploadProgress?.name : "Supports all file types"}
           </p>
         </div>
       </div>
@@ -199,10 +219,12 @@ export function DropZone({ onUpload, disabled, compact = false }: DropZoneProps)
         )}
 
         <div className="space-y-1">
-          <p className={cn(
-            "text-base sm:text-lg font-semibold transition-colors",
-            isDragging ? "text-primary" : "text-foreground"
-          )}>
+          <p
+            className={cn(
+              "text-base sm:text-lg font-semibold transition-colors",
+              isDragging ? "text-primary" : "text-foreground",
+            )}
+          >
             {isUploading
               ? `Uploading ${uploadProgress?.count || 0} file(s)...`
               : isDragging
@@ -210,9 +232,7 @@ export function DropZone({ onUpload, disabled, compact = false }: DropZoneProps)
                 : "Drag & drop files here"}
           </p>
           <p className="text-xs sm:text-sm text-muted-foreground">
-            {isUploading
-              ? uploadProgress?.name
-              : "or click anywhere to browse"}
+            {isUploading ? uploadProgress?.name : "or click anywhere to browse"}
           </p>
         </div>
       </div>

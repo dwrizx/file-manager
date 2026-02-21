@@ -1,4 +1,14 @@
-import { Download, Trash2, Loader2, Folder, FolderOpen, Eye, GripVertical, Check, FolderInput } from "lucide-react";
+import {
+  Download,
+  Trash2,
+  Loader2,
+  Folder,
+  FolderOpen,
+  Eye,
+  GripVertical,
+  Check,
+  FolderInput,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FileIcon } from "./FileIcon";
 import { cn } from "@/lib/utils";
@@ -31,7 +41,10 @@ function formatBytes(bytes: number): string {
   if (bytes <= 0) return "-";
   const k = 1024;
   const sizes = ["B", "KB", "MB", "GB", "TB"];
-  const i = Math.min(Math.floor(Math.log(bytes) / Math.log(k)), sizes.length - 1);
+  const i = Math.min(
+    Math.floor(Math.log(bytes) / Math.log(k)),
+    sizes.length - 1,
+  );
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
 }
 
@@ -229,7 +242,7 @@ function FileItem({
           : "bg-card hover:bg-muted/50 border-transparent hover:border-border",
         file.isDirectory && "hover:bg-amber-500/5 hover:border-amber-500/30",
         isDragOver && "bg-primary/20 border-primary scale-[1.02] shadow-lg",
-        isDragging && "opacity-50 scale-95"
+        isDragging && "opacity-50 scale-95",
       )}
     >
       {/* Drag handle */}
@@ -242,17 +255,19 @@ function FileItem({
           "shrink-0 size-5 rounded-md border-2 flex items-center justify-center transition-all",
           isSelected
             ? "bg-primary border-primary text-primary-foreground scale-105"
-            : "border-muted-foreground/30 hover:border-primary hover:scale-105"
+            : "border-muted-foreground/30 hover:border-primary hover:scale-105",
         )}
       >
         {isSelected && <Check className="size-3" />}
       </button>
 
       {/* Icon */}
-      <div className={cn(
-        "shrink-0 size-10 rounded-lg flex items-center justify-center transition-transform group-hover:scale-105",
-        file.isDirectory ? "bg-amber-500/10" : "bg-muted"
-      )}>
+      <div
+        className={cn(
+          "shrink-0 size-10 rounded-lg flex items-center justify-center transition-transform group-hover:scale-105",
+          file.isDirectory ? "bg-amber-500/10" : "bg-muted",
+        )}
+      >
         {file.isDirectory ? (
           isDragOver ? (
             <FolderOpen className="size-6 text-amber-500" />
@@ -266,7 +281,10 @@ function FileItem({
 
       {/* Info */}
       <div className="flex-1 min-w-0">
-        <p className="font-medium truncate group-hover:text-primary transition-colors" title={file.name}>
+        <p
+          className="font-medium truncate group-hover:text-primary transition-colors"
+          title={file.name}
+        >
           {file.name}
         </p>
         <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-2">
@@ -283,7 +301,10 @@ function FileItem({
             <Button
               variant="ghost"
               size="icon-sm"
-              onClick={(e) => { e.stopPropagation(); onPreview(file); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                onPreview(file);
+              }}
               title="Preview"
               className="hover:bg-primary/10 hover:text-primary"
             >
@@ -303,7 +324,10 @@ function FileItem({
         <Button
           variant="ghost"
           size="icon-sm"
-          onClick={(e) => { e.stopPropagation(); onMoveFile?.(file); }}
+          onClick={(e) => {
+            e.stopPropagation();
+            onMoveFile?.(file);
+          }}
           title="Move to folder"
           className="hover:bg-blue-500/10 hover:text-blue-500"
         >

@@ -1,6 +1,13 @@
 import { serve } from "bun";
 import index from "./index.html";
-import { listFiles, saveFile, getFile, deleteFile, createFolder, moveFile } from "./utils/files";
+import {
+  listFiles,
+  saveFile,
+  getFile,
+  deleteFile,
+  createFolder,
+  moveFile,
+} from "./utils/files";
 import { loadConfig, saveConfig } from "./lib/config";
 
 const server = serve({
@@ -17,7 +24,7 @@ const server = serve({
         const body = await req.json();
         const config = await saveConfig(body);
         return Response.json(config);
-      }
+      },
     },
 
     "/api/files": {
@@ -32,13 +39,22 @@ const server = serve({
         const url = new URL(req.url);
         const path = url.searchParams.get("path") || "";
         const formData = await req.formData();
-        const uploadedFiles: Array<{ name: string; size: number; type: string; path: string }> = [];
+        const uploadedFiles: Array<{
+          name: string;
+          size: number;
+          type: string;
+          path: string;
+        }> = [];
 
         for (const [_, value] of formData.entries()) {
           if (value && typeof value !== "string") {
             const file = value as File;
             const buffer = await file.arrayBuffer();
-            const fileInfo = await saveFile(file.name, new Uint8Array(buffer), path);
+            const fileInfo = await saveFile(
+              file.name,
+              new Uint8Array(buffer),
+              path,
+            );
             uploadedFiles.push(fileInfo);
           }
         }
@@ -46,7 +62,7 @@ const server = serve({
         return Response.json({
           success: true,
           files: uploadedFiles,
-          message: `${uploadedFiles.length} file(s) uploaded successfully`
+          message: `${uploadedFiles.length} file(s) uploaded successfully`,
         });
       },
     },
@@ -60,7 +76,7 @@ const server = serve({
           return Response.json({ error: "File not found" }, { status: 404 });
         }
 
-        const filename = filePath.split('/').pop() || filePath;
+        const filename = filePath.split("/").pop() || filePath;
         return new Response(file, {
           headers: {
             "Content-Disposition": `attachment; filename="${filename}"`,
@@ -87,7 +103,10 @@ const server = serve({
         const { name, path = "" } = body;
 
         if (!name) {
-          return Response.json({ error: "Folder name is required" }, { status: 400 });
+          return Response.json(
+            { error: "Folder name is required" },
+            { status: 400 },
+          );
         }
 
         const folder = await createFolder(name, path);
@@ -101,7 +120,10 @@ const server = serve({
         const { source, destination } = body;
 
         if (!source || !destination) {
-          return Response.json({ error: "Source and destination are required" }, { status: 400 });
+          return Response.json(
+            { error: "Source and destination are required" },
+            { status: 400 },
+          );
         }
 
         const success = await moveFile(source, destination);

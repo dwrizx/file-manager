@@ -1,5 +1,14 @@
 import { useState, useRef } from "react";
-import { Folder, FolderOpen, Check, Download, Trash2, FolderInput, Eye, GripVertical } from "lucide-react";
+import {
+  Folder,
+  FolderOpen,
+  Check,
+  Download,
+  Trash2,
+  FolderInput,
+  Eye,
+  GripVertical,
+} from "lucide-react";
 import { FileIcon } from "./FileIcon";
 import { cn } from "@/lib/utils";
 
@@ -31,7 +40,10 @@ function formatBytes(bytes: number): string {
   if (bytes <= 0) return "-";
   const k = 1024;
   const sizes = ["B", "KB", "MB", "GB"];
-  const i = Math.min(Math.floor(Math.log(bytes) / Math.log(k)), sizes.length - 1);
+  const i = Math.min(
+    Math.floor(Math.log(bytes) / Math.log(k)),
+    sizes.length - 1,
+  );
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
 }
 
@@ -49,7 +61,11 @@ export function IconView({
   onDragStart,
   onDrop,
 }: IconViewProps) {
-  const [contextMenu, setContextMenu] = useState<{ file: FileInfo; x: number; y: number } | null>(null);
+  const [contextMenu, setContextMenu] = useState<{
+    file: FileInfo;
+    x: number;
+    y: number;
+  } | null>(null);
 
   const handleDoubleClick = (file: FileInfo) => {
     if (file.isDirectory) {
@@ -110,7 +126,10 @@ export function IconView({
           <div
             className="fixed inset-0 z-40"
             onClick={closeContextMenu}
-            onContextMenu={(e) => { e.preventDefault(); closeContextMenu(); }}
+            onContextMenu={(e) => {
+              e.preventDefault();
+              closeContextMenu();
+            }}
           />
           <div
             className="fixed z-50 bg-popover border rounded-xl shadow-xl py-1.5 min-w-[160px] animate-in fade-in zoom-in-95 duration-100"
@@ -121,12 +140,18 @@ export function IconView({
                 <ContextMenuItem
                   icon={<Eye className="size-4" />}
                   label="Preview"
-                  onClick={() => { onPreview(contextMenu.file); closeContextMenu(); }}
+                  onClick={() => {
+                    onPreview(contextMenu.file);
+                    closeContextMenu();
+                  }}
                 />
                 <ContextMenuItem
                   icon={<Download className="size-4" />}
                   label="Download"
-                  onClick={() => { onDownload(contextMenu.file.path); closeContextMenu(); }}
+                  onClick={() => {
+                    onDownload(contextMenu.file.path);
+                    closeContextMenu();
+                  }}
                 />
                 <div className="h-px bg-border my-1" />
               </>
@@ -134,7 +159,10 @@ export function IconView({
             <ContextMenuItem
               icon={<FolderInput className="size-4" />}
               label="Move to..."
-              onClick={() => { onMove(contextMenu.file); closeContextMenu(); }}
+              onClick={() => {
+                onMove(contextMenu.file);
+                closeContextMenu();
+              }}
             />
             <div className="h-px bg-border my-1" />
             <ContextMenuItem
@@ -166,7 +194,7 @@ function ContextMenuItem({
       onClick={onClick}
       className={cn(
         "flex items-center gap-2 w-full px-3 py-1.5 text-sm hover:bg-muted transition-colors",
-        className
+        className,
       )}
     >
       {icon}
@@ -281,17 +309,21 @@ function IconItem({
       className={cn(
         "relative flex flex-col items-center p-3 rounded-2xl cursor-pointer transition-all duration-200 group",
         isSelected && "bg-primary/10 ring-2 ring-primary/40 shadow-sm",
-        isFocused && !isSelected && "bg-muted/40 ring-1 ring-border/50 shadow-xs",
+        isFocused &&
+          !isSelected &&
+          "bg-muted/40 ring-1 ring-border/50 shadow-xs",
         !isSelected && !isFocused && "hover:bg-muted/30 hover:shadow-xs",
         isDragOver && "bg-primary/20 ring-2 ring-primary scale-105 shadow-md",
-        isDragging && "opacity-40 scale-95"
+        isDragging && "opacity-40 scale-95",
       )}
     >
       {/* Drag handle indicator on hover */}
-      <div className={cn(
-        "absolute top-2 right-2 opacity-0 group-hover:opacity-40 transition-opacity",
-        isDragging && "opacity-0"
-      )}>
+      <div
+        className={cn(
+          "absolute top-2 right-2 opacity-0 group-hover:opacity-40 transition-opacity",
+          isDragging && "opacity-0",
+        )}
+      >
         <GripVertical className="size-3.5 text-muted-foreground" />
       </div>
 
@@ -303,12 +335,16 @@ function IconItem({
       )}
 
       {/* Icon */}
-      <div className={cn(
-        "size-16 rounded-2xl flex items-center justify-center mb-3 transition-all duration-300",
-        file.isDirectory ? "bg-amber-500/10 shadow-[0_0_20px_rgba(245,158,11,0.1)]" : "bg-muted/40",
-        isDragOver && "bg-primary/30 animate-pulse",
-        !isDragging && "group-hover:scale-110 group-hover:-translate-y-1"
-      )}>
+      <div
+        className={cn(
+          "size-16 rounded-2xl flex items-center justify-center mb-3 transition-all duration-300",
+          file.isDirectory
+            ? "bg-amber-500/10 shadow-[0_0_20px_rgba(245,158,11,0.1)]"
+            : "bg-muted/40",
+          isDragOver && "bg-primary/30 animate-pulse",
+          !isDragging && "group-hover:scale-110 group-hover:-translate-y-1",
+        )}
+      >
         {file.isDirectory ? (
           isDragOver ? (
             <FolderOpen className="size-10 text-primary animate-bounce" />
@@ -321,10 +357,14 @@ function IconItem({
       </div>
 
       {/* Name */}
-      <p className={cn(
-        "text-xs text-center line-clamp-2 w-full break-all leading-tight font-medium transition-colors",
-        isSelected ? "text-primary" : "text-foreground/90 group-hover:text-foreground"
-      )}>
+      <p
+        className={cn(
+          "text-xs text-center line-clamp-2 w-full break-all leading-tight font-medium transition-colors",
+          isSelected
+            ? "text-primary"
+            : "text-foreground/90 group-hover:text-foreground",
+        )}
+      >
         {file.name}
       </p>
 

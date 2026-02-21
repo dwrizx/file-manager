@@ -12,8 +12,8 @@ export interface FileInfo {
 }
 
 async function getRoot(): Promise<string> {
-    await loadConfig();
-    return getDataDir();
+  await loadConfig();
+  return getDataDir();
 }
 
 export async function ensureDataDir(): Promise<void> {
@@ -57,7 +57,11 @@ export async function listFiles(subPath: string = ""): Promise<FileInfo[]> {
   }
 }
 
-export async function saveFile(name: string, data: Uint8Array, subPath: string = ""): Promise<FileInfo> {
+export async function saveFile(
+  name: string,
+  data: Uint8Array,
+  subPath: string = "",
+): Promise<FileInfo> {
   await ensureDataDir();
   const root = await getRoot();
   const safeName = name.replace(/[^a-zA-Z0-9._-]/g, "_");
@@ -79,11 +83,16 @@ export async function saveFile(name: string, data: Uint8Array, subPath: string =
   };
 }
 
-export async function createFolder(name: string, subPath: string = ""): Promise<FileInfo> {
+export async function createFolder(
+  name: string,
+  subPath: string = "",
+): Promise<FileInfo> {
   await ensureDataDir();
   const root = await getRoot();
   const safeName = name.replace(/[^a-zA-Z0-9._-]/g, "_");
-  const targetDir = subPath ? join(root, subPath, safeName) : join(root, safeName);
+  const targetDir = subPath
+    ? join(root, subPath, safeName)
+    : join(root, safeName);
 
   await mkdir(targetDir, { recursive: true });
   const stats = await stat(targetDir);
@@ -102,7 +111,10 @@ export async function createFolder(name: string, subPath: string = ""): Promise<
 export async function getFile(filePath: string): Promise<Bun.BunFile | null> {
   await ensureDataDir();
   const root = await getRoot();
-  const safePath = filePath.split('/').map(p => p.replace(/[^a-zA-Z0-9._-]/g, "_")).join('/');
+  const safePath = filePath
+    .split("/")
+    .map((p) => p.replace(/[^a-zA-Z0-9._-]/g, "_"))
+    .join("/");
   const fullPath = join(root, safePath);
   const file = Bun.file(fullPath);
   if (await file.exists()) {
@@ -114,7 +126,10 @@ export async function getFile(filePath: string): Promise<Bun.BunFile | null> {
 export async function deleteFile(filePath: string): Promise<boolean> {
   await ensureDataDir();
   const root = await getRoot();
-  const safePath = filePath.split('/').map(p => p.replace(/[^a-zA-Z0-9._-]/g, "_")).join('/');
+  const safePath = filePath
+    .split("/")
+    .map((p) => p.replace(/[^a-zA-Z0-9._-]/g, "_"))
+    .join("/");
   const fullPath = join(root, safePath);
 
   try {
@@ -130,11 +145,20 @@ export async function deleteFile(filePath: string): Promise<boolean> {
   }
 }
 
-export async function moveFile(sourcePath: string, destPath: string): Promise<boolean> {
+export async function moveFile(
+  sourcePath: string,
+  destPath: string,
+): Promise<boolean> {
   await ensureDataDir();
   const root = await getRoot();
-  const safeSource = sourcePath.split('/').map(p => p.replace(/[^a-zA-Z0-9._-]/g, "_")).join('/');
-  const safeDest = destPath.split('/').map(p => p.replace(/[^a-zA-Z0-9._-]/g, "_")).join('/');
+  const safeSource = sourcePath
+    .split("/")
+    .map((p) => p.replace(/[^a-zA-Z0-9._-]/g, "_"))
+    .join("/");
+  const safeDest = destPath
+    .split("/")
+    .map((p) => p.replace(/[^a-zA-Z0-9._-]/g, "_"))
+    .join("/");
 
   const fullSource = join(root, safeSource);
   const fullDest = join(root, safeDest);
@@ -178,7 +202,7 @@ function getFileType(filename: string): string {
     "7z": "archive",
     tar: "archive",
     gz: "archive",
-    "iso": "archive",
+    iso: "archive",
   };
   return types[ext] || "file";
 }
@@ -187,6 +211,9 @@ export function formatBytes(bytes: number): string {
   if (bytes <= 0) return "0 B";
   const k = 1024;
   const sizes = ["B", "KB", "MB", "GB", "TB"];
-  const i = Math.min(Math.floor(Math.log(bytes) / Math.log(k)), sizes.length - 1);
+  const i = Math.min(
+    Math.floor(Math.log(bytes) / Math.log(k)),
+    sizes.length - 1,
+  );
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
 }
